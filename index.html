@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>台股監控中心</title>
+<title>股市監控中心</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Microsoft JhengHei','Noto Sans TC',system-ui,sans-serif; background: #0f172a; color: #e2e8f0; }
@@ -20,16 +20,18 @@
 </head><body>
 
 <div class="nav">
-  <div class="nav-brand">台股監控</div>
+  <div class="nav-brand">股市監控</div>
   <div class="nav-item active" onclick="switchTab('punish')" id="nav-punish">處置股追蹤</div>
   <div class="nav-item" onclick="switchTab('etf')" id="nav-etf">ETF 持股追蹤</div>
   <div class="nav-item" onclick="switchTab('sector')" id="nav-sector">族群熱度監控</div>
+  <div class="nav-item" onclick="switchTab('us')" id="nav-us">美股昨日強勢股</div>
   <div class="nav-update" id="update-info"></div>
 </div>
 
 <iframe id="frame-punish" src="punish.html"></iframe>
 <iframe id="frame-etf" src="etf.html" class="hidden"></iframe>
 <iframe id="frame-sector" class="hidden"></iframe>
+<iframe id="frame-us" src="us.html" class="hidden"></iframe>
 
 <div id="placeholder-sector" class="placeholder hidden">
   <div class="icon">📊</div>
@@ -38,7 +40,7 @@
 </div>
 
 <script>
-const tabs = ['punish', 'etf', 'sector'];
+const tabs = ['punish', 'etf', 'sector', 'us'];
 function switchTab(name) {
   tabs.forEach(t => {
     document.getElementById('nav-' + t).classList.toggle('active', t === name);
@@ -50,11 +52,4 @@ function switchTab(name) {
   // sector 特殊處理：沒有 src 時顯示 placeholder
   if (name === 'sector') {
     const sf = document.getElementById('frame-sector');
-    if (!sf.src || sf.src === window.location.href) {
-      sf.classList.add('hidden');
-      document.getElementById('placeholder-sector').classList.remove('hidden');
-    }
-  }
-}
-</script>
-</body></html>
+    if (!sf.src || sf.src === window.location.hr
