@@ -5,53 +5,62 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; }
-  body { font-family: 'Microsoft JhengHei','Noto Sans TC',system-ui,sans-serif; background: #0f172a; color: #e2e8f0; display: flex; flex-direction: column; }
-  .nav { display: flex; background: #1e293b; border-bottom: 2px solid #334155; padding: 0 1em; flex-shrink: 0; z-index: 999; position: relative; }
-  .nav-item { padding: 0.8em 1.5em; cursor: pointer; font-weight: 500; color: #94a3b8; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; font-size: 0.95em; user-select: none; }
+  body { font-family: 'Microsoft JhengHei','Noto Sans TC',system-ui,sans-serif; background: #0f172a; color: #e2e8f0; }
+  .nav { display: flex; background: #1e293b; border-bottom: 2px solid #334155; padding: 0 1em; height: 48px; align-items: stretch; position: relative; z-index: 9999; }
+  .nav-item { padding: 0 1.5em; cursor: pointer; font-weight: 500; color: #94a3b8; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; font-size: 0.95em; user-select: none; display: flex; align-items: center; }
   .nav-item:hover { color: #e2e8f0; }
   .nav-item.active { color: #60a5fa; border-bottom-color: #3b82f6; }
-  .nav-brand { padding: 0.8em 1em 0.8em 0; font-weight: 700; color: #f1f5f9; font-size: 1em; border-right: 1px solid #334155; margin-right: 0.5em; }
-  .frame-wrap { flex: 1; position: relative; }
-  .frame-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; background: #f1f5f9; }
-  .placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #64748b; background: #0f172a; }
+  .nav-brand { padding: 0 1em; font-weight: 700; color: #f1f5f9; font-size: 1em; border-right: 1px solid #334155; margin-right: 0.5em; display: flex; align-items: center; }
+  .content { position: absolute; top: 48px; left: 0; right: 0; bottom: 0; }
+  .content iframe { width: 100%; height: 100%; border: none; background: #f1f5f9; display: block; }
+  .tab-panel { width: 100%; height: 100%; display: none; }
+  .tab-panel.active { display: block; }
+  .placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #64748b; background: #0f172a; }
   .placeholder .icon { font-size: 3em; margin-bottom: 0.5em; }
   .placeholder p { font-size: 1.1em; }
-  .hidden { display: none; }
 </style>
 </head><body>
 
-<div class="nav">
+<div class="nav" id="navbar">
   <div class="nav-brand">股市監控</div>
-  <div class="nav-item active" onclick="switchTab('punish')" id="nav-punish">處置股追蹤</div>
-  <div class="nav-item" onclick="switchTab('etf')" id="nav-etf">ETF 持股追蹤</div>
-  <div class="nav-item" onclick="switchTab('sector')" id="nav-sector">族群熱度監控</div>
-  <div class="nav-item" onclick="switchTab('us')" id="nav-us">美股昨日強勢股</div>
+  <div class="nav-item active" data-tab="punish">處置股追蹤</div>
+  <div class="nav-item" data-tab="etf">ETF 持股追蹤</div>
+  <div class="nav-item" data-tab="sector">族群熱度監控</div>
+  <div class="nav-item" data-tab="us">美股昨日強勢股</div>
 </div>
 
-<div class="frame-wrap">
-  <iframe id="frame-punish" src="punish.html"></iframe>
-  <iframe id="frame-etf" src="etf.html" class="hidden"></iframe>
-  <iframe id="frame-sector" class="hidden"></iframe>
-  <iframe id="frame-us" src="us.html" class="hidden"></iframe>
-
-  <div id="placeholder-sector" class="placeholder hidden">
-    <div class="icon">📊</div>
-    <p>族群熱度監控即將上線</p>
-    <p style="font-size:0.85em; margin-top:0.5em; color:#475569">串接 XQ 盤中資料後自動呈現</p>
+<div class="content">
+  <div class="tab-panel active" id="panel-punish">
+    <iframe src="punish.html"></iframe>
+  </div>
+  <div class="tab-panel" id="panel-etf">
+    <iframe src="etf.html"></iframe>
+  </div>
+  <div class="tab-panel" id="panel-sector">
+    <div class="placeholder">
+      <div class="icon">📊</div>
+      <p>族群熱度監控即將上線</p>
+      <p style="font-size:0.85em; margin-top:0.5em; color:#475569">串接 XQ 盤中資料後自動呈現</p>
+    </div>
+  </div>
+  <div class="tab-panel" id="panel-us">
+    <iframe src="us.html"></iframe>
   </div>
 </div>
 
 <script>
-const tabs = ['punish', 'etf', 'sector', 'us'];
-function switchTab(name) {
-  tabs.forEach(t => {
-    document.getElementById('nav-' + t).classList.toggle('active', t === name);
-    const frame = document.getElementById('frame-' + t);
-    if (frame) frame.classList.toggle('hidden', t !== name);
-    const ph = document.getElementById('placeholder-' + t);
-    if (ph) ph.classList.toggle('hidden', t !== name);
-  });
-  if (name === 'sector') {
-    const sf = document.getElementById('frame-sector');
-    if (!sf.src || sf.src === window.location.href) {
-      sf.classL
+(function() {
+  var navItems = document.querySelectorAll('.nav-item[data-tab]');
+  var panels = document.querySelectorAll('.tab-panel');
+
+  function switchTab(tabName) {
+    for (var i = 0; i < navItems.length; i++) {
+      if (navItems[i].getAttribute('data-tab') === tabName) {
+        navItems[i].className = 'nav-item active';
+      } else {
+        navItems[i].className = 'nav-item';
+      }
+    }
+    for (var j = 0; j < panels.length; j++) {
+      if (panels[j].id === 'panel-' + tabName) {
+        panels[j].class
