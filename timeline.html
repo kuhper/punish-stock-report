@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全球市場時序儀表板</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: 'Microsoft JhengHei','Noto Sans TC',system-ui,sans-serif;
+    line-height: 1.5;
+  }
+  .container { max-width: 1280px; margin: 0 auto; }
+  header { margin-bottom: 20px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 6px 0; }
+  .subtitle { font-size: 13px; color: #94a3b8; margin: 0; }
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    font-size: 12px; color: #94a3b8; margin-bottom: 14px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .swatch { width: 12px; height: 12px; border-radius: 2px; }
+  .note { font-size: 12px; color: #64748b; margin: 0 0 14px 0; }
+  .chart-wrap { position: relative; width: 100%; height: 700px; }
+  footer { margin-top: 18px; font-size: 11px; color: #64748b; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>全球市場時序儀表板</h1>
+    <p class="subtitle">以台北時間 (UTC+8) 為基準，紅色虛線為當下時間，每 30 秒自動更新</p>
+  </header>
+
+  <div class="card">
+    <div class="legend">
+      <span class="legend-item"><span class="swatch" style="background:#0C447C;"></span>期貨成交</span>
+      <span class="legend-item"><span class="swatch" style="background:#378ADD;"></span>現貨成交</span>
+      <span class="legend-item"><span class="swatch" style="background:#F0997B;"></span>模擬試搓</span>
+      <span class="legend-item"><span class="swatch" style="background:#1D9E75;"></span>亞洲他國</span>
+      <span class="legend-item"><span class="swatch" style="background:#BA7517;"></span>歐股</span>
+      <span class="legend-item"><span class="swatch" style="background:#D85A30;"></span>美股</span>
+      <span class="legend-item"><span class="swatch" style="background:#7F77DD;"></span>美股期貨</span>
+    </div>
+    <p class="note">美國採夏令時間（3月中~11月初）；冬令時所有美國時段往後推 1 小時。</p>
+    <div class="chart-wrap">
+      <canvas id="timeline"></canvas>
+    </div>
+  </div>
+  <footer>僅供時序參考，不構成投資建議。實際開收盤可能因節日調整。</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const sessions = [
+  { label: '台股期貨日盤開盤前', start: 8.75, end: 9.0, c: '#185FA5' },
+  { label: '台股期貨日盤 (TX)', start: 9.0, end: 13.75, c: '#185FA5' },
+  { label: '台股期貨夜盤 (TX)', start: 15.0, end: 29.0, c: '#0C447C' },
+  { label: '台積電/聯電 個股期夜盤', start: 17.417, end: 29.0, c: '#042C53' },
+  { label: '台股現貨 試搓', start: 8.5, end: 9.0, c: '#F0997B' },
+  { label: '台股現貨 (TWSE)', start: 9.0, end: 13.5, c: '#378ADD' },
+  { label: '台股盤後零股交易', start: 13.667, end: 14.5, c: '#85B7EB' },
+  { label: '日股 (TSE) 上午盤', start: 8.0, end: 10.5, c: '#1D9E75' },
+  { label: '日股 (TSE) 下午盤', start: 11.5, end: 14.0, c: '#1D9E75' },
+  { label: '韓股 (KOSPI)', start: 8.0, end: 14.5, c: '#0F6E56' },
+  { label: '中國 A股 上午盤', start: 9.5, end: 11.5, c: '#5DCAA5' },
+  { label: '中國 A股 下午盤', start: 13.0, end: 15.0, c: '#5DCAA5' },
+  { label: '香港恆生', start: 9.5, end: 16.0, c: '#085041' },
+  { label: '歐股 (倫敦/法蘭克福)', start: 15.0, end: 23.5, c: '#BA7517' },
+  { label: '美股盤前', start: 16.0, end: 21.5, c: '#F0997B' },
+  { label: '美股正常時段', start: 21.5, end: 28.0, c: '#D85A30' },
+  { label: '美股盤後', start: 28.0, end: 32.0, c: '#993C1D' },
+  { label: '美股期貨 (ES/NQ/YM)', start: 6.0, end: 29.75, c: '#7F77DD' },
+  { label: '費半 SOX 期貨', start: 6.0, end: 29.0, c: '#534AB7' },
+  { label: 'WTI 原油期貨', start: 6.0, end: 29.0, c: '#3C3489' }
+];
+const fmt = (h) => {
+  const hh = ((Math.floor(h) % 24) + 24) % 24;
+  const mm = Math.round((h - Math.floor(h)) * 60);
+  const next = h >= 24 ? ' (隔日)' : '';
+  return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0') + next;
+};
+function getTaipeiTime() {
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const tp = new Date(utc + 8 * 3600000);
+  return { h: tp.getHours() + tp.getMinutes()/60 + tp.getSeconds()/3600,
+    hh: String(tp.getHours()).padStart(2,'0'),
+    mm: String(tp.getMinutes()).padStart(2,'0'),
+    ss: String(tp.getSeconds()).padStart(2,'0') };
+}
+const nowLinePlugin = {
+  id: 'nowLine',
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const t = getTaipeiTime();
+    if (t.h < scales.x.min || t.h > scales.x.max) return;
+    const x = scales.x.getPixelForValue(t.h);
+    if (x < chartArea.left || x > chartArea.right) return;
+    ctx.save();
+    ctx.strokeStyle = '#E24B4A'; ctx.lineWidth = 1.5; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(x, chartArea.top); ctx.lineTo(x, chartArea.bottom); ctx.stroke();
+    ctx.setLineDash([]); ctx.fillStyle = '#E24B4A'; ctx.font = '600 11px sans-serif';
+    const lbl = '現在 ' + t.hh + ':' + t.mm;
+    if (x + 80 > chartArea.right) { ctx.textAlign = 'right'; ctx.fillText(lbl, x-4, chartArea.top+12); }
+    else { ctx.textAlign = 'left'; ctx.fillText(lbl, x+4, chartArea.top+12); }
+    ctx.restore();
+  }
+};
+const chart = new Chart(document.getElementById('timeline'), {
+  type: 'bar',
+  data: { labels: sessions.map(s=>s.label), datasets: [{ data: sessions.map(s=>[s.start,s.end]),
+    backgroundColor: sessions.map(s=>s.c), borderWidth:0, borderSkipped:false, borderRadius:3,
+    barPercentage:0.78, categoryPercentage:0.92 }] },
+  plugins: [nowLinePlugin],
+  options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, animation:false,
+    layout:{padding:{right:12,left:0,top:8,bottom:8}},
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:(ctx)=>{const[a,b]=ctx.raw;return fmt(a)+' → '+fmt(b);}}}},
+    scales:{ x:{min:6,max:33,ticks:{stepSize:2,color:'#64748b',font:{size:11},
+      callback:(v)=>{const hh=((Math.round(v)%24)+24)%24;return v>=24?String(hh).padStart(2,'0')+'(+1)':String(hh).padStart(2,'0');}},
+      grid:{color:'rgba(255,255,255,0.06)'},title:{display:true,text:'台北時間（小時）',color:'#94a3b8',font:{size:12}}},
+      y:{ticks:{color:'#cbd5e1',font:{size:11}},grid:{display:false}} } }
+});
+setInterval(()=>chart.draw(), 30000);
+window.addEventListener('resize',()=>chart.resize());
+</script>
+</body></html>
