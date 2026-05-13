@@ -4,15 +4,16 @@
 <title>股市監控中心</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Microsoft JhengHei','Noto Sans TC',system-ui,sans-serif; background: #0f172a; color: #e2e8f0; }
-  .nav { display: flex; background: #1e293b; border-bottom: 2px solid #334155; padding: 0 1em; position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
-  .nav-item { padding: 0.8em 1.5em; cursor: pointer; font-weight: 500; color: #94a3b8; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; font-size: 0.95em; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: 'Microsoft JhengHei','Noto Sans TC',system-ui,sans-serif; background: #0f172a; color: #e2e8f0; display: flex; flex-direction: column; }
+  .nav { display: flex; background: #1e293b; border-bottom: 2px solid #334155; padding: 0 1em; flex-shrink: 0; z-index: 999; position: relative; }
+  .nav-item { padding: 0.8em 1.5em; cursor: pointer; font-weight: 500; color: #94a3b8; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; font-size: 0.95em; user-select: none; }
   .nav-item:hover { color: #e2e8f0; }
   .nav-item.active { color: #60a5fa; border-bottom-color: #3b82f6; }
   .nav-brand { padding: 0.8em 1em 0.8em 0; font-weight: 700; color: #f1f5f9; font-size: 1em; border-right: 1px solid #334155; margin-right: 0.5em; }
-  .nav-update { margin-left: auto; padding: 0.8em 1em; color: #64748b; font-size: 0.8em; align-self: center; }
-  iframe { position: fixed; top: 48px; left: 0; right: 0; bottom: 0; width: 100%; height: calc(100vh - 48px); border: none; background: #f1f5f9; }
-  .placeholder { position: fixed; top: 48px; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #64748b; }
+  .frame-wrap { flex: 1; position: relative; }
+  .frame-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; background: #f1f5f9; }
+  .placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #64748b; background: #0f172a; }
   .placeholder .icon { font-size: 3em; margin-bottom: 0.5em; }
   .placeholder p { font-size: 1.1em; }
   .hidden { display: none; }
@@ -25,18 +26,19 @@
   <div class="nav-item" onclick="switchTab('etf')" id="nav-etf">ETF 持股追蹤</div>
   <div class="nav-item" onclick="switchTab('sector')" id="nav-sector">族群熱度監控</div>
   <div class="nav-item" onclick="switchTab('us')" id="nav-us">美股昨日強勢股</div>
-  <div class="nav-update" id="update-info"></div>
 </div>
 
-<iframe id="frame-punish" src="punish.html"></iframe>
-<iframe id="frame-etf" src="etf.html" class="hidden"></iframe>
-<iframe id="frame-sector" class="hidden"></iframe>
-<iframe id="frame-us" src="us.html" class="hidden"></iframe>
+<div class="frame-wrap">
+  <iframe id="frame-punish" src="punish.html"></iframe>
+  <iframe id="frame-etf" src="etf.html" class="hidden"></iframe>
+  <iframe id="frame-sector" class="hidden"></iframe>
+  <iframe id="frame-us" src="us.html" class="hidden"></iframe>
 
-<div id="placeholder-sector" class="placeholder hidden">
-  <div class="icon">📊</div>
-  <p>族群熱度監控即將上線</p>
-  <p style="font-size:0.85em; margin-top:0.5em; color:#475569">串接 XQ 盤中資料後自動呈現</p>
+  <div id="placeholder-sector" class="placeholder hidden">
+    <div class="icon">📊</div>
+    <p>族群熱度監控即將上線</p>
+    <p style="font-size:0.85em; margin-top:0.5em; color:#475569">串接 XQ 盤中資料後自動呈現</p>
+  </div>
 </div>
 
 <script>
@@ -49,7 +51,7 @@ function switchTab(name) {
     const ph = document.getElementById('placeholder-' + t);
     if (ph) ph.classList.toggle('hidden', t !== name);
   });
-  // sector 特殊處理：沒有 src 時顯示 placeholder
   if (name === 'sector') {
     const sf = document.getElementById('frame-sector');
-    if (!sf.src || sf.src === window.location.hr
+    if (!sf.src || sf.src === window.location.href) {
+      sf.classL
