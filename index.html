@@ -45,4 +45,5 @@ function getTaipei(){var now=new Date();var utc=now.getTime()+now.getTimezoneOff
 function updateClock(){var tp=getTaipei();var hh=String(tp.getHours()).padStart(2,'0');var mm=String(tp.getMinutes()).padStart(2,'0');var ss=String(tp.getSeconds()).padStart(2,'0');document.getElementById('clock').textContent=hh+':'+mm+':'+ss;var nowMin=tp.getHours()*60+tp.getMinutes();var best=null;var bestDiff=99999;for(var i=0;i<MK.length;i++){var mMin=MK[i].h*60+MK[i].m;var diff=mMin-nowMin;if(diff<=0)diff+=1440;if(diff<bestDiff){bestDiff=diff;best=MK[i];}}var ne=document.getElementById('next-market');if(best){var hrs=Math.floor(bestDiff/60);var mins=bestDiff%60;var cd=hrs>0?hrs+'h'+(mins>0?String(mins).padStart(2,'0')+'m':''):mins+'m';ne.innerHTML='下一開盤 <span class="market">'+best.n+'</span> <span class="countdown">'+cd+'</span>';}}
 updateClock();setInterval(updateClock,1000);
 </script>
-</body></html>
+</body><!-- v1778817815 -->
+</html>
