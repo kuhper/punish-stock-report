@@ -7,15 +7,18 @@
 html,body{height:100%;overflow:hidden}
 body{font-family:'Microsoft JhengHei','Noto Sans TC',system-ui,sans-serif;background:#0f172a;color:#e2e8f0}
 .nav{display:flex;background:#1e293b;border-bottom:2px solid #334155;padding:0 1em;height:48px;align-items:stretch}
-.nav a{padding:0 1.2em;font-weight:500;color:#94a3b8;border-bottom:3px solid transparent;margin-bottom:-2px;font-size:.9em;display:flex;align-items:center;text-decoration:none}
+.nav a{padding:0 1.2em;font-weight:500;color:#94a3b8;border-bottom:3px solid transparent;margin-bottom:-2px;font-size:.9em;display:flex;align-items:center;text-decoration:none;white-space:nowrap}
 .nav a:hover{color:#e2e8f0}
 .nav a.active{color:#60a5fa;border-bottom-color:#3b82f6}
 .nav-brand{padding:0 .8em;font-weight:700;color:#f1f5f9;font-size:1em;border-right:1px solid #334155;margin-right:.3em;display:flex;align-items:center}
-.nav-clock{margin-left:auto;display:flex;align-items:center;gap:.8em;padding-right:.5em}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:.6em;padding-right:.5em}
 .clock-time{font-family:'Consolas','SF Mono',monospace;font-size:.95em;color:#f1f5f9;font-weight:600}
-.clock-next{font-size:.75em;color:#94a3b8;background:#334155;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.clock-next{font-size:.72em;color:#94a3b8;background:#334155;padding:2px 8px;border-radius:4px;white-space:nowrap}
 .clock-next .market{color:#fbbf24;font-weight:600}
 .clock-next .countdown{color:#60a5fa}
+.sched{font-size:.68em;color:#64748b;background:#1e293b;border:1px solid #334155;padding:2px 8px;border-radius:4px;white-space:nowrap;display:none}
+.sched .t{color:#94a3b8}
+.sched .cd{color:#22d3ee;font-weight:600}
 iframe{position:absolute;top:48px;left:0;width:100%;height:calc(100% - 48px);border:none;background:#f1f5f9}
 </style>
 </head><body>
@@ -26,7 +29,8 @@ iframe{position:absolute;top:48px;left:0;width:100%;height:calc(100% - 48px);bor
 <a href="?p=sector" id="t-sector">族群熱度監控</a>
 <a href="?p=us" id="t-us">美股強勢股</a>
 <a href="?p=timeline" id="t-timeline">全球時序</a>
-<div class="nav-clock">
+<div class="nav-right">
+<span class="sched" id="sched-info"></span>
 <span class="clock-time" id="clock">--:--:--</span>
 <span class="clock-next" id="next-market"></span>
 </div>
@@ -40,9 +44,30 @@ if(src){document.getElementById('main-frame').src=src;}
 else if(p==='sector'){document.getElementById('main-frame').style.display='none';document.body.insertAdjacentHTML('beforeend','<div style="position:absolute;top:48px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#64748b;background:#0f172a"><p style="font-size:1.1em">族群熱度監控即將上線</p></div>');}
 var el=document.getElementById('t-'+p);
 if(el)el.className='active';
+var SCHED={punish:[{h:8,m:0},{h:21,m:0}],etf:[{h:21,m:0}],us:[{h:7,m:0}]};
 var MK=[{n:'美股期貨',h:6,m:0},{n:'日股/韓股',h:8,m:0},{n:'台股期貨',h:8,m:45},{n:'台股現貨',h:9,m:0},{n:'中國A股',h:9,m:30},{n:'香港恆生',h:9,m:30},{n:'日股下午',h:11,m:30},{n:'中國A股下午',h:13,m:0},{n:'台股期貨夜盤',h:15,m:0},{n:'歐股',h:15,m:0},{n:'美股盤前',h:16,m:0},{n:'美股正式',h:21,m:30}];
 function getTaipei(){var now=new Date();var utc=now.getTime()+now.getTimezoneOffset()*60000;return new Date(utc+8*3600000);}
-function updateClock(){var tp=getTaipei();var hh=String(tp.getHours()).padStart(2,'0');var mm=String(tp.getMinutes()).padStart(2,'0');var ss=String(tp.getSeconds()).padStart(2,'0');document.getElementById('clock').textContent=hh+':'+mm+':'+ss;var nowMin=tp.getHours()*60+tp.getMinutes();var best=null;var bestDiff=99999;for(var i=0;i<MK.length;i++){var mMin=MK[i].h*60+MK[i].m;var diff=mMin-nowMin;if(diff<=0)diff+=1440;if(diff<bestDiff){bestDiff=diff;best=MK[i];}}var ne=document.getElementById('next-market');if(best){var hrs=Math.floor(bestDiff/60);var mins=bestDiff%60;var cd=hrs>0?hrs+'h'+(mins>0?String(mins).padStart(2,'0')+'m':''):mins+'m';ne.innerHTML='下一開盤 <span class="market">'+best.n+'</span> <span class="countdown">'+cd+'</span>';}}
+function fmtCD(diff){var h=Math.floor(diff/60);var m=diff%60;if(h>0)return h+'h'+String(m).padStart(2,'0')+'m';return m+'m';}
+function updateClock(){
+var tp=getTaipei();
+var hh=String(tp.getHours()).padStart(2,'0');
+var mm=String(tp.getMinutes()).padStart(2,'0');
+var ss=String(tp.getSeconds()).padStart(2,'0');
+document.getElementById('clock').textContent=hh+':'+mm+':'+ss;
+var nowMin=tp.getHours()*60+tp.getMinutes();
+var best=null;var bestDiff=99999;
+for(var i=0;i<MK.length;i++){var mMin=MK[i].h*60+MK[i].m;var diff=mMin-nowMin;if(diff<=0)diff+=1440;if(diff<bestDiff){bestDiff=diff;best=MK[i];}}
+var ne=document.getElementById('next-market');
+if(best){ne.innerHTML='下一開盤 <span class="market">'+best.n+'</span> <span class="countdown">'+fmtCD(bestDiff)+'</span>';}
+var sc=SCHED[p];
+var si=document.getElementById('sched-info');
+if(sc&&sc.length>0){
+si.style.display='inline';
+var nextUp=99999;var nextH='';
+for(var j=0;j<sc.length;j++){var sMin=sc[j].h*60+sc[j].m;var d=sMin-nowMin;if(d<=0)d+=1440;if(d<nextUp){nextUp=d;nextH=String(sc[j].h).padStart(2,'0')+':'+String(sc[j].m).padStart(2,'0');}}
+si.innerHTML='<span class="t">下次更新 '+nextH+'</span> <span class="cd">'+fmtCD(nextUp)+'</span>';
+}else{si.style.display='none';}
+}
 updateClock();setInterval(updateClock,1000);
 </script>
 </body></html>
