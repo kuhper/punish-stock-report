@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-TW"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>股市監控中心</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -40,7 +43,8 @@ iframe{position:absolute;top:48px;left:0;width:100%;height:calc(100% - 48px);bor
 var map={punish:'punish.html',etf:'etf.html',us:'us.html',timeline:'timeline.html'};
 var p=new URLSearchParams(location.search).get('p')||'punish';
 var src=map[p];
-if(src){document.getElementById('main-frame').src=src;}
+var bust='?_='+Date.now();
+if(src){document.getElementById('main-frame').src=src+bust;}
 else if(p==='sector'){document.getElementById('main-frame').style.display='none';document.body.insertAdjacentHTML('beforeend','<div style="position:absolute;top:48px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#64748b;background:#0f172a"><p style="font-size:1.1em">族群熱度監控即將上線</p></div>');}
 var el=document.getElementById('t-'+p);
 if(el)el.className='active';
