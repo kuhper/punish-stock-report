@@ -1,4 +1,3 @@
-import os
 #!/usr/bin/env python3
 """
 美股昨日強勢股追蹤
