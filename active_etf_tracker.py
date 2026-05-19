@@ -1195,4 +1195,6 @@ def main():
     print(f"\n歷史資料目錄: {DATA_DIR}")
 
 
-if __name__ == "__main__":
+
+if __name__ == "__main__":
+    main()
