@@ -1,4 +1,3 @@
-import os
 #!/usr/bin/env python3
 """
 台股處置股追蹤工具
@@ -370,49 +369,30 @@ def analyze_clusters(records, industry_map, exit_days=7):
             r["market_cap"] = ""
             r["all_subs"] = []
 
-    # 用所有細產業做交叉比對聚集
-    # 1. 建立 子產業 -> 處置股 映射（排除衍生商品）
-    sub_to_stocks = defaultdict(set)
+    # 直接用細產業分群
     real_stocks = [r for r in records if r["industry"] != "衍生商品"]
+
+    # 建立 子產業 -> 處置股 映射（用於交叉關聯顯示）
+    sub_to_stocks = defaultdict(set)
     for r in real_stocks:
         for sub in r["all_subs"]:
             sub_to_stocks[sub].add(r["code"])
 
-    # 2. 只保留有 2+ 檔的子產業，按具體程度排序（成員越少越具體）
-    shared_subs = {sub: codes for sub, codes in sub_to_stocks.items() if len(codes) >= 2}
-    sorted_subs = sorted(shared_subs.items(), key=lambda x: len(x[1]))
-
-    # 3. 貪心分配：每檔股票分到最具體的共同子產業
-    assigned = {}  # code -> cluster_name
-    for sub, codes in sorted_subs:
-        # 跳過太廣泛的子產業（超過 8 檔就算太廣）
-        if len(codes) > 8:
-            continue
-        unassigned_in_group = [c for c in codes if c not in assigned]
-        if len(unassigned_in_group) >= 2:
-            # 這個子產業至少有 2 個未分配的股票，建立族群
-            for c in codes:
-                if c not in assigned:
-                    assigned[c] = sub
-        elif len(unassigned_in_group) == 1:
-            # 只有 1 個未分配，但跟已分配的有交集也可以加入
-            # 檢查是否有同組的已分配到其他族群
-            pass  # 保持簡單，不混合
-
-    # 4. 未被分配的用主要細產業歸群（原邏輯）
-    for r in real_stocks:
-        if r["code"] not in assigned:
-            assigned[r["code"]] = r["industry"]
-
-    # 5. 建立族群
+    # 以細產業為主要分群
     by_industry = defaultdict(list)
     for r in records:
         if r["industry"] == "衍生商品":
             by_industry["衍生商品"].append(r)
         else:
-            cluster = assigned.get(r["code"], r["industry"])
-            r["cluster"] = cluster  # 記錄實際歸屬的族群
-            by_industry[cluster].append(r)
+            r["cluster"] = r["industry"]
+            # 找出同族群的相關子產業（有其他處置股共享的）
+            related = set()
+            for sub in r.get("all_subs", []):
+                peers = sub_to_stocks.get(sub, set())
+                if len(peers) >= 2:
+                    related.add(sub)
+            r["related_subs"] = sorted(related)
+            by_industry[r["industry"]].append(r)
 
     # 即將出關：end_date 在 exit_days 天內
     exit_cutoff = today + timedelta(days=exit_days)
@@ -641,9 +621,18 @@ def generate_html_report(records, analysis, exit_days):
             mg = s.get("margin", "")
             pc_cls = ' class="tag-soon"' if pc == "全面預收" else ""
             rows += f'<tr><td class="code">{s["code"]}</td><td>{s["name"]}</td><td class="pos wrap" title="{pos}">{pos}</td><td>{s["measure"]}{multi_reason}</td><td>{mi}</td><td><span{pc_cls}>{pc}</span></td><td>{mg}</td><td class="wrap">{s["reason"]}</td><td>{s["period_str"]}</td><td class="status">{status_html}</td></tr>\n'
+        # 收集此族群的相關子產業
+        all_related = set()
+        for s in stocks:
+            all_related.update(s.get("related_subs", []))
+        all_related.discard(ind)
+        related_tags = ""
+        if all_related:
+            tags = " ".join(f'<span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">{t}</span>' for t in sorted(all_related)[:6])
+            related_tags = f'<div style="margin-top:4px">{tags}</div>'
         cluster_cards += f'''
 <div class="cluster-card">
-  <h3><span class="badge" style="background:{badge_color}">處置 {count}</span> {ind}{total_str}</h3>
+  <h3><span class="badge" style="background:{badge_color}">處置 {count}</span> {ind}{total_str}</h3>{related_tags}
   <table>
     <colgroup><col style="width:50px"><col style="width:62px"><col style="width:110px"><col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px"><col style="width:130px"><col style="width:120px"><col style="width:80px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
