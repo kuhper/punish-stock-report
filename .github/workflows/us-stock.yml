@@ -1,8 +1,8 @@
-﻿name: Punish Stock Morning
+﻿name: US Stock Hourly
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 15-23 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -14,10 +14,10 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install dependencies
-        run: pip install requests
-      - name: Run punish tracker
+        run: pip install requests yfinance pandas
+      - name: Run US stock tracker
         env:
           GITHUB_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-        run: python punish_tracker.py --days 3 --tg --deploy
+        run: python us_stock_tracker.py --deploy --tg --top-ah 5
