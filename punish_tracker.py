@@ -424,7 +424,7 @@ def analyze_clusters(records, industry_map, exit_days=7):
 # ---- 輸出 ----
 
 def print_console_report(records, analysis, exit_days):
-    today = datetime.now()
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     print(f"\n{'='*70}")
     print(f"  台股處置股追蹤報告")
     print(f"  查詢時間: {today.strftime('%Y-%m-%d %H:%M')}  |  處置股總數: {len(records)} 檔")
@@ -442,9 +442,9 @@ def print_console_report(records, analysis, exit_days):
         total_str = f"族群 {total} 檔，" if total > 0 else ""
         print(f"\n  【{ind}】{total_str}處置 {len(stocks)} 檔:")
         for s in stocks:
-            end_str = s["end"].strftime("%m/%d") if s["end"] else "?"
+            exit_dt = s["end"] + timedelta(days=1) if s["end"] else None; end_str = exit_dt.strftime("%m/%d") if exit_dt else "?"
             days_left = (s["end"] - today).days if s["end"] else "?"
-            status = f"剩 {days_left} 天" if isinstance(days_left, int) and days_left >= 0 else "已出關"
+            status = f"剩 {days_left+1} 天" if isinstance(days_left, int) and days_left >= 0 else "已出關"
             mi = s.get("match_interval", "")
             pc = s.get("precollect", "")
             mg = s.get("margin", "")
@@ -454,8 +454,8 @@ def print_console_report(records, analysis, exit_days):
     print(f"\n■ {exit_days} 天內即將出關")
     if analysis["upcoming_exits"]:
         for s in analysis["upcoming_exits"]:
-            end_str = s["end"].strftime("%Y-%m-%d")
-            days_left = (s["end"] - today).days
+            exit_dt = s["end"] + timedelta(days=1); end_str = exit_dt.strftime("%Y-%m-%d")
+            days_left = (s["end"] - today).days + 1
             print(f"  {s['code']} {s['name']:<8} [{s['industry']}]  出關日: {end_str} (剩 {days_left} 天)")
     else:
         print(f"  （無）")
@@ -466,7 +466,7 @@ def print_console_report(records, analysis, exit_days):
         print(f"\n■ 單獨被處置（族群無聚集）")
         for ind, stocks in singles.items():
             s = stocks[0]
-            end_str = s["end"].strftime("%m/%d") if s["end"] else "?"
+            exit_dt = s["end"] + timedelta(days=1) if s["end"] else None; end_str = exit_dt.strftime("%m/%d") if exit_dt else "?"
             print(f"  {s['code']} {s['name']:<8} [{ind}]  出關 {end_str} | {s['reason']}")
 
 
@@ -582,7 +582,7 @@ function switchTab(tabName) {{
 
 
 def generate_html_report(records, analysis, exit_days):
-    today = datetime.now()
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     by_ind = analysis["by_industry"]
 
     # 族群聚集卡片
@@ -600,17 +600,19 @@ def generate_html_report(records, analysis, exit_days):
         for s in sorted(stocks, key=lambda x: x["end"] or datetime.max):
             end_str = s["end"].strftime("%Y-%m-%d") if s["end"] else "?"
             days_left = (s["end"] - today).days if s["end"] else 999
+            # 出關日 = 處置結束日隔天 09:00（結束日當天仍在處置中）
+            exit_date = s["end"] + timedelta(days=1) if s["end"] else None
+            exit_str = exit_date.strftime("%m/%d") if exit_date else ""
             if days_left < 0:
-                out_date = s["end"].strftime("%m/%d") if s["end"] else ""
-                status_html = f'<span class="tag-out">{out_date} 09:00出關</span>'
+                status_html = f'<span class="tag-out">{exit_str} 09:00已出關</span>'
             elif days_left == 0:
-                status_html = '<span class="tag-soon">今日 09:00出關</span>'
+                status_html = f'<span class="tag-soon">明日 {exit_str} 09:00出關</span>'
             elif days_left <= 3:
-                status_html = f'<span class="tag-soon">剩 {days_left} 天</span>'
+                status_html = f'<span class="tag-soon">剩 {days_left+1} 天 ({exit_str}出關)</span>'
             elif days_left <= 7:
-                status_html = f'<span class="tag-near">剩 {days_left} 天</span>'
+                status_html = f'<span class="tag-near">剩 {days_left+1} 天 ({exit_str}出關)</span>'
             else:
-                status_html = f'<span class="tag-in">剩 {days_left} 天</span>'
+                status_html = f'<span class="tag-in">剩 {days_left+1} 天</span>'
             multi_name = ""
             multi_reason = f' (累計{s["total_records"]}次)' if s["total_records"] > 1 else ""
             pos = s.get("position", "")
@@ -648,15 +650,17 @@ def generate_html_report(records, analysis, exit_days):
             continue
         s = stocks[0]
         days_left = (s["end"] - today).days if s["end"] else 999
+        exit_date = s["end"] + timedelta(days=1) if s["end"] else None
+        exit_str = exit_date.strftime("%m/%d") if exit_date else ""
         if days_left < 0:
-            out_date = s["end"].strftime("%m/%d") if s["end"] else ""
-            status_html = f'<span class="tag-out">{out_date} 09:00出關</span>'
+            # exit date already computed above
+            status_html = f'<span class="tag-out">{exit_str} 09:00已出關</span>'
         elif days_left == 0:
-            status_html = '<span class="tag-soon">今日 09:00出關</span>'
+            status_html = f'<span class="tag-soon">明日 {exit_str} 09:00出關</span>'
         elif days_left <= 3:
-            status_html = f'<span class="tag-soon">剩 {days_left} 天</span>'
+            status_html = f'<span class="tag-soon">剩 {days_left+1} 天 ({exit_str}出關)</span>'
         else:
-            status_html = f'<span class="tag-in">剩 {days_left} 天</span>'
+            status_html = f'<span class="tag-in">剩 {days_left+1} 天</span>'
         pos = s.get("position", "")
         cap = s.get("market_cap", "")
         cap_html = f'{cap}億' if cap else ""
@@ -666,19 +670,21 @@ def generate_html_report(records, analysis, exit_days):
         pc_cls = ' class="tag-soon"' if pc == "全面預收" else ""
         singles_rows += f'<tr><td class="code">{s["code"]}</td><td>{s["name"]}</td><td>{ind}</td><td class="pos wrap" title="{pos}">{pos}</td><td>{s["measure"]}</td><td>{mi}</td><td><span{pc_cls}>{pc}</span></td><td>{mg}</td><td class="wrap">{s["reason"]}</td><td>{s["period_str"]}</td><td class="status">{status_html}</td></tr>\n'
 
-    # 出關時間軸
+    # 出關時間軸（顯示出關日 = 處置結束日+1天）
     timeline_rows = ""
     exit_groups = defaultdict(list)
     for s in analysis["still_in"]:
         if s["end"]:
-            exit_groups[s["end"].strftime("%Y-%m-%d")].append(s)
+            exit_date = s["end"] + timedelta(days=1)
+            exit_groups[exit_date.strftime("%Y-%m-%d")].append(s)
     for date_str in sorted(exit_groups.keys()):
         stocks = exit_groups[date_str]
         days_left = (datetime.strptime(date_str, "%Y-%m-%d") - today).days
         names = ", ".join(f'{s["code"]} {s["name"]}({s["industry"]})' for s in stocks)
         count = len(stocks)
         highlight = ' class="highlight"' if count >= 2 else ""
-        timeline_rows += f'<tr{highlight}><td>{date_str}</td><td>{"剩 "+str(days_left)+" 天" if days_left >= 0 else "已出關"}</td><td><strong>{count}</strong> 檔</td><td>{names}</td></tr>\n'
+        countdown = f"剩 {days_left} 天" if days_left > 0 else "明日出關" if days_left == 0 else "已出關"
+        timeline_rows += f'<tr{highlight}><td>{date_str}</td><td>{countdown}</td><td><strong>{count}</strong> 檔</td><td>{names}</td></tr>\n'
 
     # 統計
     total = len(records)
