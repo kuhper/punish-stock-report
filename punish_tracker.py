@@ -285,9 +285,20 @@ def fetch_industry_map():
     # 優先載入細產業 CSV
     ind_map = load_sub_industry_csv()
     if ind_map:
-        print(f"  產業對應表: {len(ind_map)} 筆")
-        return ind_map
-    # Fallback: TWSE API
+        # 驗證：確認是細產業（非粗分類）
+        broad_names = set(INDUSTRY_NAMES.values())
+        sample_industries = set(v.get("industry","") for v in list(ind_map.values())[:50])
+        overlap = sample_industries & broad_names
+        if len(overlap) > len(sample_industries) * 0.5:
+            print(f"  ⚠ CSV 載入但產業為粗分類，可能欄位錯誤: {overlap}")
+        else:
+            print(f"  ✓ 產業對應表: {len(ind_map)} 筆 (細產業)")
+            return ind_map
+
+    # Fallback: TWSE API（粗分類）
+    print("  ⚠ 細產業 CSV 未載入，退回 TWSE/TPEx 粗分類！")
+    print(f"    嘗試路徑: {Path(__file__).parent / '系產業.csv'}")
+    print(f"    檔案存在: {(Path(__file__).parent / '系產業.csv').exists()}")
     ind_map = {}
     try:
         r = requests.get("https://openapi.twse.com.tw/v1/opendata/t187ap03_L",
