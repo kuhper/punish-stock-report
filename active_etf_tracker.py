@@ -774,7 +774,7 @@ _BODY = """<div class="page">
   <div>
     <div class="brand-tag">Active ETF Holdings Monitor</div>
     <h1>🎯 主動式 ETF 持股動態</h1>
-    <div class="page-meta">資料日: <span class="num">{today}</span> · 每日 21:00 自動更新</div>
+    <div class="page-meta">資料日: <span class="num">{today}</span> · 每日 07:00 / 19:00 / 21:00 自動更新</div>
   </div>
 </header>
 

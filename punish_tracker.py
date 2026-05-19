@@ -547,7 +547,7 @@ function switchTab(tabName) {{
 </script>
 </head><body>
 <h1>台股處置股追蹤</h1>
-<p class="subtitle">更新時間: {report_datetime} ｜ 每日 08:00 / 21:00 自動更新 ｜ 資料來源: 證交所/櫃買中心</p>
+<p class="subtitle">更新時間: {report_datetime} ｜ 每日 07:00 / 19:00 / 21:00 自動更新 ｜ 資料來源: 證交所/櫃買中心</p>
 
 <div class="stats">
   <div class="stat-card danger"><div class="num">{total}</div><div class="label">處置公告總筆數</div></div>

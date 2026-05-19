@@ -761,7 +761,7 @@ document.querySelectorAll('.sort-btn').forEach(function(btn) {
 <style>{css}</style>
 </head><body>
 <h1>美股昨日強勢股</h1>
-<p class="subtitle">交易日: {trade_date} ｜ 更新: {now_str} ｜ 每日 07:00 自動更新 ｜ 涵蓋 {data["total"]} 檔</p>
+<p class="subtitle">交易日: {trade_date} ｜ 更新: {now_str} ｜ 每小時自動更新 (23:00~07:00) ｜ 涵蓋 {data["total"]} 檔</p>
 
 <div class="tabs">
   <div class="tab active" data-cap="mega" onclick="switchCap('mega')">千億以上 <span class="badge">{len(cats["mega"])}</span></div>
