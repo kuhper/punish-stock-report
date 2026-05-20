@@ -62,19 +62,15 @@ GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_REPO = "kuhper/punish-stock-report"
 
 
-def deploy_etf_to_github(html_path):
-    """將 ETF 報告部署到 GitHub Pages 的 etf.html"""
-    if not GITHUB_TOKEN or not GITHUB_REPO:
-        print("  GitHub 部署跳過：未設定 GITHUB_TOKEN 或 GITHUB_REPO")
-        return False
+def _github_upload_file(repo_path, file_content_bytes, commit_msg):
+    """上傳單一檔案到 GitHub repo（binary safe）"""
     import base64
-    api_url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/etf.html"
+    api_url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{repo_path}"
     headers_gh = {
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json",
     }
-    content = Path(html_path).read_text(encoding="utf-8")
-    content_b64 = base64.b64encode(content.encode("utf-8")).decode("ascii")
+    content_b64 = base64.b64encode(file_content_bytes).decode("ascii")
     sha = None
     try:
         r = requests.get(api_url, headers=headers_gh, timeout=10)
@@ -82,20 +78,48 @@ def deploy_etf_to_github(html_path):
             sha = r.json().get("sha")
     except Exception:
         pass
-    payload = {
-        "message": f"更新 ETF 持股報告 {datetime.now().strftime('%Y-%m-%d %H:%M')}",
-        "content": content_b64,
-    }
+    payload = {"message": commit_msg, "content": content_b64}
     if sha:
         payload["sha"] = sha
+    r = requests.put(api_url, headers=headers_gh, json=payload, timeout=30)
+    r.raise_for_status()
+    return True
+
+
+def deploy_etf_history_to_github():
+    """將 etf_data/*.csv 歷史資料上傳到 repo"""
+    if not GITHUB_TOKEN or not GITHUB_REPO:
+        return
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+    csv_files = list(DATA_DIR.glob("*.csv"))
+    if not csv_files:
+        return
+    for csv_path in csv_files:
+        try:
+            content = csv_path.read_bytes()
+            repo_path = f"etf_data/{csv_path.name}"
+            _github_upload_file(repo_path, content, f"更新 ETF 歷史資料 {now_str}")
+            print(f"  歷史資料上傳: {csv_path.name}")
+        except Exception as e:
+            print(f"  歷史資料上傳失敗 {csv_path.name}: {e}")
+
+
+def deploy_etf_to_github(html_path):
+    """將 ETF 報告部署到 GitHub Pages 的 etf.html"""
+    if not GITHUB_TOKEN or not GITHUB_REPO:
+        print("  GitHub 部署跳過：未設定 GITHUB_TOKEN 或 GITHUB_REPO")
+        return False
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
     try:
-        r = requests.put(api_url, headers=headers_gh, json=payload, timeout=30)
-        r.raise_for_status()
+        content = Path(html_path).read_bytes()
+        _github_upload_file("etf.html", content, f"更新 ETF 持股報告 {now_str}")
         print(f"  GitHub Pages etf.html 部署成功")
-        return True
     except Exception as e:
         print(f"  GitHub Pages 部署失敗: {e}")
         return False
+    # 同時上傳歷史 CSV 資料
+    deploy_etf_history_to_github()
+    return True
 
 
 def _tg_summary(all_results) -> str:

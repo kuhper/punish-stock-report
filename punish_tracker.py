@@ -546,8 +546,13 @@ function switchTab(tabName) {{
 }}
 </script>
 </head><body>
-<h1>台股處置股追蹤</h1>
-<p class="subtitle">更新時間: {report_datetime} ｜ 每日 07:00 / 19:00 / 21:00 自動更新 ｜ 資料來源: 證交所/櫃買中心</p>
+<div class="header-wrap">
+  <div class="header-left">
+    <h1>台股處置股追蹤</h1>
+    <p class="subtitle">更新時間: {report_datetime} ｜ 每日 07:00 / 19:00 / 21:00 自動更新 ｜ 資料來源: 證交所/櫃買中心</p>
+  </div>
+  {tomorrow_exit_html}
+</div>
 
 <div class="stats">
   <div class="stat-card danger"><div class="num">{total}</div><div class="label">處置公告總筆數</div></div>
@@ -697,6 +702,28 @@ def generate_html_report(records, analysis, exit_days):
         countdown = f"剩 {days_left} 天" if days_left > 0 else "明日出關" if days_left == 0 else "已出關"
         timeline_rows += f'<tr{highlight}><td>{date_str}</td><td>{countdown}</td><td><strong>{count}</strong> 檔</td><td>{names}</td></tr>\n'
 
+    # 明日出關卡片
+    tomorrow = today + timedelta(days=1)
+    tomorrow_stocks = []
+    for s in analysis["still_in"]:
+        if s["end"]:
+            exit_date = s["end"] + timedelta(days=1)
+            if exit_date.date() == tomorrow.date():
+                tomorrow_stocks.append(s)
+    if tomorrow_stocks:
+        te_items = ""
+        for s in sorted(tomorrow_stocks, key=lambda x: x.get("industry", "")):
+            te_items += f'<li><span class="te-code">{s["code"]}</span>{s["name"]} <span class="te-ind">{s.get("industry","")}</span></li>\n'
+        tomorrow_exit_html = f'''<div class="tomorrow-exit">
+  <div class="te-title">&#x1F514; 明日出關 ({tomorrow.strftime("%m/%d")}) \u2014 {len(tomorrow_stocks)} 檔</div>
+  <ul class="te-list">{te_items}</ul>
+</div>'''
+    else:
+        tomorrow_exit_html = f'''<div class="tomorrow-exit" style="border-color:#94a3b8;background:linear-gradient(135deg,#f8fafc,#f1f5f9);">
+  <div class="te-title" style="color:#64748b;">明日出關 ({tomorrow.strftime("%m/%d")})</div>
+  <span class="te-none">明日無出關個股</span>
+</div>'''
+
     # 統計
     total = len(records)
     still_count = len(analysis["still_in"])
@@ -721,6 +748,7 @@ def generate_html_report(records, analysis, exit_days):
         cluster_cards=cluster_cards,
         timeline_rows=timeline_rows,
         singles_rows=singles_rows,
+        tomorrow_exit_html=tomorrow_exit_html,
     )
 
 
