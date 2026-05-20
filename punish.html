@@ -1,46 +1,85 @@
 <!DOCTYPE html>
 <html lang="zh-TW"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>處置股追蹤 2026-05-20</title>
 <style>
-  * { box-sizing: border-box; }
-  body { font-family: 'Microsoft JhengHei','Noto Sans TC',sans-serif; margin:0; padding:1.5em; background:#f1f5f9; color:#1e293b; font-size:14px; }
-  h1 { margin-bottom:0.2em; }
-  .subtitle { color:#64748b; margin-bottom:1.2em; }
-  .stats { display:flex; gap:0.8em; margin-bottom:1.5em; flex-wrap:wrap; }
-  .stat-card { background:#fff; border-radius:8px; padding:0.8em 1.2em; box-shadow:0 1px 3px rgba(0,0,0,0.08); min-width:120px; }
-  .stat-card .num { font-size:1.8em; font-weight:700; }
-  .stat-card .label { color:#64748b; font-size:0.8em; }
-  .stat-card.danger .num { color:#dc2626; }
-  .stat-card.warn .num { color:#f59e0b; }
-  .stat-card.info .num { color:#3b82f6; }
-  /* Tabs */
-  .tabs { display:flex; gap:0; border-bottom:2px solid #e2e8f0; margin-bottom:1.5em; }
-  .tab { padding:0.6em 1.5em; cursor:pointer; font-weight:500; color:#64748b; border-bottom:3px solid transparent; margin-bottom:-2px; }
-  .tab.active { color:#1e293b; border-bottom-color:#3b82f6; }
-  .tab:hover { color:#1e293b; }
-  .tab-content { display:none; }
-  .tab-content.active { display:block; }
-  h2 { margin:1.2em 0 0.4em; padding-bottom:0.3em; border-bottom:2px solid #e2e8f0; font-size:1.1em; }
-  .cluster-card { background:#fff; border-radius:8px; padding:0.8em; margin-bottom:0.8em; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
-  .cluster-card h3 { margin:0 0 0.5em; font-size:1em; }
-  .badge { display:inline-block; color:#fff; padding:2px 10px; border-radius:12px; font-size:0.8em; margin-right:6px; }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family: -apple-system,'Microsoft JhengHei','Noto Sans TC','Segoe UI',sans-serif; background:#0f172a; color:#e2e8f0; font-size:14px; line-height:1.6; }
+  .container { max-width:1200px; margin:0 auto; padding:1.5em 1.2em; }
+
+  /* Header */
+  .header-wrap { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1em; margin-bottom:1.5em; }
+  .header-left { flex:1; min-width:0; }
+  .header-left h1 { font-size:1.6em; font-weight:700; color:#f8fafc; margin-bottom:0.3em; }
+  .header-left h1 span { background:linear-gradient(135deg,#a78bfa,#818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .subtitle { color:#64748b; font-size:0.85em; }
+
+  /* Tomorrow Exit Card */
+  .tomorrow-exit { background:#1e293b; border:1px solid #f87171; border-left:4px solid #ef4444; border-radius:10px; padding:0.8em 1em; min-width:220px; max-width:340px; }
+  .tomorrow-exit .te-title { font-weight:700; color:#f87171; font-size:0.95em; margin-bottom:0.4em; display:flex; align-items:center; gap:0.4em; }
+  .tomorrow-exit .te-list { list-style:none; }
+  .tomorrow-exit .te-list li { padding:3px 0; font-size:0.85em; color:#e2e8f0; border-bottom:1px solid #334155; }
+  .tomorrow-exit .te-list li:last-child { border-bottom:none; }
+  .tomorrow-exit .te-list .te-code { font-weight:700; color:#fbbf24; margin-right:6px; }
+  .tomorrow-exit .te-list .te-ind { color:#94a3b8; font-size:0.8em; margin-left:4px; }
+  .tomorrow-exit .te-none { color:#475569; font-size:0.85em; }
+  .tomorrow-exit.empty { border-color:#334155; border-left-color:#475569; }
+
+  /* Stats Row */
+  .stats { display:flex; gap:0.6em; margin-bottom:1.8em; flex-wrap:wrap; }
+  .stat-card { background:#1e293b; border-radius:8px; padding:0.7em 1em; min-width:110px; border:1px solid #334155; }
+  .stat-card .num { font-size:1.7em; font-weight:700; line-height:1.2; }
+  .stat-card .label { color:#94a3b8; font-size:0.75em; margin-top:2px; }
+  .stat-card.danger .num { color:#f87171; }
+  .stat-card.warn .num { color:#fbbf24; }
+  .stat-card.info .num { color:#60a5fa; }
+  .stat-card.purple .num { color:#a78bfa; }
+
+  /* Section */
+  .section { margin-bottom:2em; }
+  .section-title { font-size:1.05em; font-weight:700; color:#f8fafc; margin-bottom:0.8em; padding-left:10px; border-left:3px solid #818cf8; }
+
+  /* Cluster Cards */
+  .cluster-card { background:#1e293b; border-radius:10px; padding:1em; margin-bottom:0.8em; border:1px solid #334155; transition:border-color 0.2s; }
+  .cluster-card:hover { border-color:#475569; }
+  .cluster-card h3 { margin:0 0 0.6em; font-size:0.95em; color:#f8fafc; }
+  .badge { display:inline-block; color:#fff; padding:2px 10px; border-radius:12px; font-size:0.78em; margin-right:6px; font-weight:600; }
+
+  /* Tables */
   table { border-collapse:collapse; width:100%; table-layout:fixed; }
-  thead th { background:#334155; color:#fff; padding:4px 6px; text-align:left; font-weight:500; font-size:0.78em; white-space:nowrap; overflow:hidden; }
-  tbody td { padding:3px 6px; border-bottom:1px solid #e2e8f0; font-size:0.78em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:top; }
+  thead th { background:#0f172a; color:#94a3b8; padding:6px 6px; text-align:left; font-weight:500; font-size:0.78em; white-space:nowrap; overflow:hidden; border-bottom:1px solid #334155; position:sticky; top:0; }
+  tbody td { padding:5px 6px; border-bottom:1px solid #1e293b; font-size:0.78em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:top; color:#cbd5e1; }
   tbody td.wrap { white-space:normal; word-break:break-all; }
-  tbody tr:hover { background:#f8fafc; }
-  .code { font-weight:600; }
+  tbody tr:hover { background:#334155; }
+  .code { font-weight:700; color:#fbbf24; }
+
+  /* Status Tags */
   .status { text-align:center; white-space:nowrap; }
-  .tag-out { background:#e5e7eb; color:#6b7280; padding:1px 5px; border-radius:3px; font-size:0.75em; }
-  .tag-soon { background:#fef2f2; color:#dc2626; padding:1px 5px; border-radius:3px; font-size:0.75em; font-weight:600; }
-  .tag-near { background:#fffbeb; color:#d97706; padding:1px 5px; border-radius:3px; font-size:0.75em; }
-  .tag-in { background:#f0f9ff; color:#2563eb; padding:1px 5px; border-radius:3px; font-size:0.75em; }
-  .highlight { background:#fffbeb !important; }
-  .highlight td { font-weight:600; }
-  .pos { font-size:0.75em; color:#475569; }
-  .section { margin-bottom:1.5em; }
-  .footer { margin-top:2em; color:#94a3b8; font-size:0.8em; text-align:center; }
-  .empty-state { text-align:center; padding:3em; color:#94a3b8; }
+  .tag-out { background:#1e293b; color:#475569; padding:2px 8px; border-radius:4px; font-size:0.75em; border:1px solid #334155; }
+  .tag-soon { background:rgba(239,68,68,0.15); color:#f87171; padding:2px 8px; border-radius:4px; font-size:0.75em; font-weight:600; border:1px solid rgba(239,68,68,0.3); }
+  .tag-near { background:rgba(251,191,36,0.12); color:#fbbf24; padding:2px 8px; border-radius:4px; font-size:0.75em; border:1px solid rgba(251,191,36,0.25); }
+  .tag-in { background:rgba(96,165,250,0.1); color:#60a5fa; padding:2px 8px; border-radius:4px; font-size:0.75em; border:1px solid rgba(96,165,250,0.2); }
+  .highlight { background:rgba(251,191,36,0.08) !important; }
+  .highlight td { font-weight:600; color:#fbbf24; }
+  .pos { font-size:0.75em; color:#94a3b8; }
+
+  /* Footer */
+  .footer { margin-top:2.5em; color:#475569; font-size:0.78em; text-align:center; padding:1em 0; border-top:1px solid #1e293b; }
+
+  .empty-state { text-align:center; padding:3em; color:#475569; }
+
+  /* Related sub-industry tags */
+  .related-tag { background:#334155; color:#94a3b8; padding:2px 8px; border-radius:4px; font-size:0.72em; display:inline-block; margin:2px 3px 2px 0; }
+
+  /* Responsive */
+  @media (max-width:768px) {
+    .stats { gap:0.4em; }
+    .stat-card { min-width:80px; padding:0.5em 0.7em; }
+    .stat-card .num { font-size:1.3em; }
+    .header-wrap { flex-direction:column; }
+    .tomorrow-exit { max-width:100%; }
+    table { font-size:0.72em; }
+  }
 </style>
 <script>
 function switchTab(tabName) {
@@ -51,9 +90,11 @@ function switchTab(tabName) {
 }
 </script>
 </head><body>
+<div class="container">
+
 <div class="header-wrap">
   <div class="header-left">
-    <h1>台股處置股追蹤</h1>
+    <h1><span>台股處置股追蹤</span></h1>
     <p class="subtitle">更新時間: 2026-05-20 00:00 ｜ 每日 07:00 / 19:00 / 21:00 自動更新 ｜ 資料來源: 證交所/櫃買中心</p>
   </div>
   <div class="tomorrow-exit">
@@ -79,17 +120,15 @@ function switchTab(tabName) {
   <div class="stat-card danger"><div class="num">104</div><div class="label">處置公告總筆數</div></div>
   <div class="stat-card warn"><div class="num">84</div><div class="label">目前仍在處置</div></div>
   <div class="stat-card info"><div class="num">27</div><div class="label">3天內出關</div></div>
-  <div class="stat-card"><div class="num">12</div><div class="label">聚集族群數</div></div>
+  <div class="stat-card purple"><div class="num">12</div><div class="label">聚集族群數</div></div>
   <div class="stat-card danger"><div class="num">5</div><div class="label">最大族群 (PCB相關設備)</div></div>
 </div>
 
-<div>
-
 <div class="section">
-<h2>族群聚集分析</h2>
+<div class="section-title">族群聚集分析</div>
 
 <div class="cluster-card">
-  <h3><span class="badge" style="background:#dc2626">處置 5</span> PCB相關設備<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 16 檔</span></h3><div style="margin-top:4px"><span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">IC檢測設備</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">半導體製程設備</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">封測用設備</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">產業機械</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">設備儀器商</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">面板設備</span></div>
+  <h3><span class="badge" style="background:#dc2626">處置 5</span> PCB相關設備<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 16 檔</span></h3><div style="margin-top:4px"><span class="related-tag">IC檢測設備</span> <span class="related-tag">半導體製程設備</span> <span class="related-tag">封測用設備</span> <span class="related-tag">產業機械</span> <span class="related-tag">設備儀器商</span> <span class="related-tag">面板設備</span></div>
   <table>
     <colgroup><col style="width:50px"><col style="width:62px"><col style="width:110px"><col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px"><col style="width:130px"><col style="width:120px"><col style="width:80px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
@@ -102,7 +141,7 @@ function switchTab(tabName) {
   </table>
 </div>
 <div class="cluster-card">
-  <h3><span class="badge" style="background:#dc2626">處置 4</span> 封測用設備<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 15 檔</span></h3><div style="margin-top:4px"><span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">半導體製程設備</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">封測服務與材料</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">設備儀器商</span></div>
+  <h3><span class="badge" style="background:#dc2626">處置 4</span> 封測用設備<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 15 檔</span></h3><div style="margin-top:4px"><span class="related-tag">半導體製程設備</span> <span class="related-tag">封測服務與材料</span> <span class="related-tag">設備儀器商</span></div>
   <table>
     <colgroup><col style="width:50px"><col style="width:62px"><col style="width:110px"><col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px"><col style="width:130px"><col style="width:120px"><col style="width:80px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
@@ -114,7 +153,7 @@ function switchTab(tabName) {
   </table>
 </div>
 <div class="cluster-card">
-  <h3><span class="badge" style="background:#f59e0b">處置 3</span> 矽晶圓<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 10 檔</span></h3><div style="margin-top:4px"><span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">IC製造</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">第三類半導體</span></div>
+  <h3><span class="badge" style="background:#f59e0b">處置 3</span> 矽晶圓<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 10 檔</span></h3><div style="margin-top:4px"><span class="related-tag">IC製造</span> <span class="related-tag">第三類半導體</span></div>
   <table>
     <colgroup><col style="width:50px"><col style="width:62px"><col style="width:110px"><col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px"><col style="width:130px"><col style="width:120px"><col style="width:80px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
@@ -136,7 +175,7 @@ function switchTab(tabName) {
   </table>
 </div>
 <div class="cluster-card">
-  <h3><span class="badge" style="background:#3b82f6">處置 2</span> MLCC<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 7 檔</span></h3><div style="margin-top:4px"><span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">晶片電阻</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">被動元件</span></div>
+  <h3><span class="badge" style="background:#3b82f6">處置 2</span> MLCC<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 7 檔</span></h3><div style="margin-top:4px"><span class="related-tag">晶片電阻</span> <span class="related-tag">被動元件</span></div>
   <table>
     <colgroup><col style="width:50px"><col style="width:62px"><col style="width:110px"><col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px"><col style="width:130px"><col style="width:120px"><col style="width:80px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
@@ -146,7 +185,7 @@ function switchTab(tabName) {
   </table>
 </div>
 <div class="cluster-card">
-  <h3><span class="badge" style="background:#3b82f6">處置 2</span> 電子元件代理商<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 31 檔</span></h3><div style="margin-top:4px"><span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">MLCC</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">被動元件</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">設備儀器商</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">鋁質電解電容</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">電力設備</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">電子通路</span></div>
+  <h3><span class="badge" style="background:#3b82f6">處置 2</span> 電子元件代理商<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 31 檔</span></h3><div style="margin-top:4px"><span class="related-tag">MLCC</span> <span class="related-tag">被動元件</span> <span class="related-tag">設備儀器商</span> <span class="related-tag">鋁質電解電容</span> <span class="related-tag">電力設備</span> <span class="related-tag">電子通路</span></div>
   <table>
     <colgroup><col style="width:50px"><col style="width:62px"><col style="width:110px"><col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px"><col style="width:130px"><col style="width:120px"><col style="width:80px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
@@ -156,7 +195,7 @@ function switchTab(tabName) {
   </table>
 </div>
 <div class="cluster-card">
-  <h3><span class="badge" style="background:#3b82f6">處置 2</span> 其他散熱零件<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 5 檔</span></h3><div style="margin-top:4px"><span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">封測服務與材料</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">導線架</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">散熱模組</span></div>
+  <h3><span class="badge" style="background:#3b82f6">處置 2</span> 其他散熱零件<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 5 檔</span></h3><div style="margin-top:4px"><span class="related-tag">封測服務與材料</span> <span class="related-tag">導線架</span> <span class="related-tag">散熱模組</span></div>
   <table>
     <colgroup><col style="width:50px"><col style="width:62px"><col style="width:110px"><col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px"><col style="width:130px"><col style="width:120px"><col style="width:80px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
@@ -166,7 +205,7 @@ function switchTab(tabName) {
   </table>
 </div>
 <div class="cluster-card">
-  <h3><span class="badge" style="background:#3b82f6">處置 2</span> 鋁質電解電容<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 6 檔</span></h3><div style="margin-top:4px"><span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">被動元件</span></div>
+  <h3><span class="badge" style="background:#3b82f6">處置 2</span> 鋁質電解電容<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 6 檔</span></h3><div style="margin-top:4px"><span class="related-tag">被動元件</span></div>
   <table>
     <colgroup><col style="width:50px"><col style="width:62px"><col style="width:110px"><col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px"><col style="width:130px"><col style="width:120px"><col style="width:80px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
@@ -176,7 +215,7 @@ function switchTab(tabName) {
   </table>
 </div>
 <div class="cluster-card">
-  <h3><span class="badge" style="background:#3b82f6">處置 2</span> 半導體製程設備<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 46 檔</span></h3><div style="margin-top:4px"><span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">機械零組件</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">設備儀器商</span> <span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">面板設備</span></div>
+  <h3><span class="badge" style="background:#3b82f6">處置 2</span> 半導體製程設備<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 46 檔</span></h3><div style="margin-top:4px"><span class="related-tag">機械零組件</span> <span class="related-tag">設備儀器商</span> <span class="related-tag">面板設備</span></div>
   <table>
     <colgroup><col style="width:50px"><col style="width:62px"><col style="width:110px"><col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px"><col style="width:130px"><col style="width:120px"><col style="width:80px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
@@ -186,7 +225,7 @@ function switchTab(tabName) {
   </table>
 </div>
 <div class="cluster-card">
-  <h3><span class="badge" style="background:#3b82f6">處置 2</span> 銅箔基板<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 6 檔</span></h3><div style="margin-top:4px"><span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">印刷電路板相關</span></div>
+  <h3><span class="badge" style="background:#3b82f6">處置 2</span> 銅箔基板<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 6 檔</span></h3><div style="margin-top:4px"><span class="related-tag">印刷電路板相關</span></div>
   <table>
     <colgroup><col style="width:50px"><col style="width:62px"><col style="width:110px"><col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px"><col style="width:130px"><col style="width:120px"><col style="width:80px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
@@ -196,7 +235,7 @@ function switchTab(tabName) {
   </table>
 </div>
 <div class="cluster-card">
-  <h3><span class="badge" style="background:#3b82f6">處置 2</span> 光纖主動元件<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 7 檔</span></h3><div style="margin-top:4px"><span style="background:#334155;color:#94a3b8;padding:2px 6px;border-radius:3px;font-size:0.75em">光通訊</span></div>
+  <h3><span class="badge" style="background:#3b82f6">處置 2</span> 光纖主動元件<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 7 檔</span></h3><div style="margin-top:4px"><span class="related-tag">光通訊</span></div>
   <table>
     <colgroup><col style="width:50px"><col style="width:62px"><col style="width:110px"><col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px"><col style="width:130px"><col style="width:120px"><col style="width:80px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
@@ -239,8 +278,8 @@ function switchTab(tabName) {
 </div>
 
 <div class="section">
-<h2>出關時間軸</h2>
-<p style="color:#64748b;font-size:0.85em;margin-top:0">同日多檔出關（黃底標示），流動性同時恢復，若題材仍在則資金可能回補。</p>
+<div class="section-title">出關時間軸</div>
+<p style="color:#64748b;font-size:0.82em;margin:-0.4em 0 0.8em 0">同日多檔出關（黃底標示），流動性同時恢復，若題材仍在則資金可能回補。</p>
 <div class="cluster-card">
 <table>
   <thead><tr><th style="width:90px">出關日</th><th style="width:70px">倒數</th><th style="width:50px">檔數</th><th>個股</th></tr></thead>
@@ -261,13 +300,13 @@ function switchTab(tabName) {
 </div>
 
 <div class="section">
-<h2>單獨處置個股</h2>
+<div class="section-title">單獨處置個股</div>
 <div class="cluster-card">
 <table>
 <colgroup>
 <col style="width:50px"><col style="width:62px"><col style="width:72px"><col style="width:95px">
 <col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px">
-<col style="width:130px"><col style="width:120px"><col style="width:80px">
+<col style="width:130px"><col style="width:120px"><col style="width:90px">
 </colgroup>
   <thead><tr><th>代號</th><th>名稱</th><th>產業</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
   <tbody><tr><td class="code">8227</td><td>巨有科技</td><td>ASIC</td><td class="pos wrap" title="台灣最早成立之IC 設計服務公司">台灣最早成立之IC 設計服務公司</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/12～115/05/25</td><td class="status"><span class="tag-in">剩 6 天</span></td></tr>
@@ -313,4 +352,5 @@ function switchTab(tabName) {
 </div>
 
 <p class="footer">本工具僅供資訊追蹤參考，不構成投資建議。處置股交易有額外限制（人工撮合、預收款券），請留意風險。</p>
+</div>
 </body></html>
