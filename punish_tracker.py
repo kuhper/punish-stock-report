@@ -665,6 +665,9 @@ def _build_html_template():
   .header-left h1 span {{ background:linear-gradient(135deg,#a78bfa,#818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }}
   .subtitle {{ color:#64748b; font-size:0.9em; }}
 
+  /* Header Cards Container */
+  .header-cards {{ display:flex; flex-direction:column; gap:0.8em; }}
+
   /* Tomorrow Exit Card */
   .tomorrow-exit {{ background:#1e293b; border:1px solid #f87171; border-left:4px solid #ef4444; border-radius:10px; padding:1em 1.3em; min-width:240px; max-width:380px; }}
   .tomorrow-exit .te-title {{ font-weight:700; color:#f87171; font-size:1.05em; margin-bottom:0.5em; display:flex; align-items:center; gap:0.5em; }}
@@ -675,6 +678,18 @@ def _build_html_template():
   .tomorrow-exit .te-list .te-ind {{ color:#94a3b8; font-size:0.8em; margin-left:4px; }}
   .tomorrow-exit .te-none {{ color:#475569; font-size:0.9em; }}
   .tomorrow-exit.empty {{ border-color:#334155; border-left-color:#475569; }}
+
+  /* Tomorrow Enter Card */
+  .tomorrow-enter {{ background:#1e293b; border:1px solid #38bdf8; border-left:4px solid #0ea5e9; border-radius:10px; padding:1em 1.3em; min-width:240px; max-width:380px; }}
+  .tomorrow-enter .te-title {{ font-weight:700; color:#38bdf8; font-size:1.05em; margin-bottom:0.5em; display:flex; align-items:center; gap:0.5em; }}
+  .tomorrow-enter .te-list {{ list-style:none; }}
+  .tomorrow-enter .te-list li {{ padding:5px 0; font-size:0.92em; color:#e2e8f0; border-bottom:1px solid #334155; }}
+  .tomorrow-enter .te-list li:last-child {{ border-bottom:none; }}
+  .tomorrow-enter .te-list .te-code {{ font-weight:700; color:#fbbf24; margin-right:6px; }}
+  .tomorrow-enter .te-list .te-ind {{ color:#94a3b8; font-size:0.8em; margin-left:4px; }}
+  .tomorrow-enter .te-list .te-measure {{ color:#fb923c; font-size:0.8em; margin-left:4px; }}
+  .tomorrow-enter .te-none {{ color:#475569; font-size:0.9em; }}
+  .tomorrow-enter.empty {{ border-color:#334155; border-left-color:#475569; }}
 
   /* Stats Row */
   .stats {{ display:flex; gap:0.8em; margin-bottom:2em; flex-wrap:wrap; }}
@@ -753,7 +768,10 @@ function switchTab(tabName) {{
     <h1><span>台股處置股追蹤</span></h1>
     <p class="subtitle">更新時間: {report_datetime} ｜ 每日 07:00 / 19:00 / 21:00 自動更新 ｜ 資料來源: 證交所/櫃買中心</p>
   </div>
-  {tomorrow_exit_html}
+  <div class="header-cards">
+    {tomorrow_exit_html}
+    {tomorrow_enter_html}
+  </div>
 </div>
 
 <div class="stats">
@@ -940,6 +958,28 @@ def generate_html_report(records, analysis, exit_days):
   <span class="te-none">明日無出關相關個股</span>
 </div>'''
 
+    # 明日進入處置卡片
+    tomorrow_enter_stocks = [r for r in records if r["start"] and r["start"].date() == tomorrow.date()]
+    # 排除衍生商品（權證等），只保留母股
+    tomorrow_enter_real = [r for r in tomorrow_enter_stocks if r.get("industry") != "衍生商品"]
+    tomorrow_enter_deriv = [r for r in tomorrow_enter_stocks if r.get("industry") == "衍生商品"]
+
+    tomorrow_enter_html = ""
+    if tomorrow_enter_real:
+        ent_items = ""
+        for s in sorted(tomorrow_enter_real, key=lambda x: x.get("industry", "")):
+            ent_items += f'<li><span class="te-code">{s["code"]}</span>{s["name"]} <span class="te-ind">{s.get("industry","")}</span> <span class="te-measure">{s["measure"]}</span></li>\n'
+        deriv_note = f' (+{len(tomorrow_enter_deriv)}檔衍生商品)' if tomorrow_enter_deriv else ""
+        tomorrow_enter_html = f'''<div class="tomorrow-enter">
+  <div class="te-title">\U0001F6A8 明日進入處置 ({tomorrow.strftime("%m/%d")}) — {len(tomorrow_enter_real)} 檔{deriv_note}</div>
+  <ul class="te-list">{ent_items}</ul>
+</div>'''
+    else:
+        tomorrow_enter_html = f'''<div class="tomorrow-enter empty">
+  <div class="te-title" style="color:#475569;">進場預告 ({tomorrow.strftime("%m/%d")})</div>
+  <span class="te-none">明日無新進處置個股</span>
+</div>'''
+
     # 統計
     total = len(records)
     still_count = len(analysis["still_in"])
@@ -965,6 +1005,7 @@ def generate_html_report(records, analysis, exit_days):
         timeline_rows=timeline_rows,
         singles_rows=singles_rows,
         tomorrow_exit_html=tomorrow_exit_html,
+        tomorrow_enter_html=tomorrow_enter_html,
     )
 
 
@@ -1196,17 +1237,26 @@ def main():
 
     # 去重（同股票多筆取最晚出關）
     deduped = deduplicate(all_records)
-    print(f"去重後: {len(deduped)} 檔處置股")
+    print(f"去重後: {len(deduped)} 筆（含已出關）")
 
-    # 查詢每檔股票的注意交易資訊詳情（觸發原因）
-    print("  查詢注意交易資訊觸發條件...")
-    fetch_attention_details(deduped)
+    # 產業對照
+    for r in deduped:
+        code = r["code"]
+        if code in ind_map:
+            r["industry"] = ind_map[code].get("industry", "")
+            r["all_subs"] = ind_map[code].get("all_subs", "").split(",") if ind_map[code].get("all_subs") else []
+            r["position"] = ind_map[code].get("position", "")
+            r["market_cap"] = ind_map[code].get("market_cap", "")
+        else:
+            r["industry"] = r.get("industry", "")
+            r["all_subs"] = []
+            r["position"] = ""
+            r["market_cap"] = ""
 
     # 分析
     analysis = analyze_clusters(deduped, ind_map, exit_days=args.days)
-
-    # Console 報告
-    print_console_report(deduped, analysis, args.days)
+    print(f"仍在處置: {len(analysis['still_in'])} 檔")
+    print(f"{args.days}天內出關: {len(analysis['upcoming_exits'])} 檔")
 
     # HTML 報告
     if not args.no_html:
@@ -1260,7 +1310,7 @@ def main():
                 "end": r["end"].strftime("%Y-%m-%d") if r["end"] else "",
                 "period_str": r["period_str"],
             })
-    print(f"\u6b77\u53f2\u7d00\u9304: {csv_path}")
+    print(f"歷史紀錄: {csv_path}")
 
 
 if __name__ == "__main__":
