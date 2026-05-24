@@ -14,6 +14,9 @@
   .header-left h1 span { background:linear-gradient(135deg,#a78bfa,#818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
   .subtitle { color:#64748b; font-size:0.9em; }
 
+  /* Header Cards Container */
+  .header-cards { display:flex; flex-direction:column; gap:0.8em; }
+
   /* Tomorrow Exit Card */
   .tomorrow-exit { background:#1e293b; border:1px solid #f87171; border-left:4px solid #ef4444; border-radius:10px; padding:1em 1.3em; min-width:240px; max-width:380px; }
   .tomorrow-exit .te-title { font-weight:700; color:#f87171; font-size:1.05em; margin-bottom:0.5em; display:flex; align-items:center; gap:0.5em; }
@@ -24,6 +27,18 @@
   .tomorrow-exit .te-list .te-ind { color:#94a3b8; font-size:0.8em; margin-left:4px; }
   .tomorrow-exit .te-none { color:#475569; font-size:0.9em; }
   .tomorrow-exit.empty { border-color:#334155; border-left-color:#475569; }
+
+  /* Tomorrow Enter Card */
+  .tomorrow-enter { background:#1e293b; border:1px solid #38bdf8; border-left:4px solid #0ea5e9; border-radius:10px; padding:1em 1.3em; min-width:240px; max-width:380px; }
+  .tomorrow-enter .te-title { font-weight:700; color:#38bdf8; font-size:1.05em; margin-bottom:0.5em; display:flex; align-items:center; gap:0.5em; }
+  .tomorrow-enter .te-list { list-style:none; }
+  .tomorrow-enter .te-list li { padding:5px 0; font-size:0.92em; color:#e2e8f0; border-bottom:1px solid #334155; }
+  .tomorrow-enter .te-list li:last-child { border-bottom:none; }
+  .tomorrow-enter .te-list .te-code { font-weight:700; color:#fbbf24; margin-right:6px; }
+  .tomorrow-enter .te-list .te-ind { color:#94a3b8; font-size:0.8em; margin-left:4px; }
+  .tomorrow-enter .te-list .te-measure { color:#fb923c; font-size:0.8em; margin-left:4px; }
+  .tomorrow-enter .te-none { color:#475569; font-size:0.9em; }
+  .tomorrow-enter.empty { border-color:#334155; border-left-color:#475569; }
 
   /* Stats Row */
   .stats { display:flex; gap:0.8em; margin-bottom:2em; flex-wrap:wrap; }
@@ -102,7 +117,8 @@ function switchTab(tabName) {
     <h1><span>台股處置股追蹤</span></h1>
     <p class="subtitle">更新時間: 2026-05-24 00:00 ｜ 每日 07:00 / 19:00 / 21:00 自動更新 ｜ 資料來源: 證交所/櫃買中心</p>
   </div>
-  <div class="tomorrow-exit" style="border-color:#f59e0b;">
+  <div class="header-cards">
+    <div class="tomorrow-exit" style="border-color:#f59e0b;">
   <div class="te-title" style="color:#d97706;">⚠️ 明日最後處置日 (05/25) — 8 檔</div>
   <ul class="te-list"><li><span class="te-code">8227</span>巨有科技 <span class="te-ind">ASIC</span></li>
 <li><span class="te-code">4561</span>健椿 <span class="te-ind">工具機主軸</span></li>
@@ -115,6 +131,20 @@ function switchTab(tabName) {
 </ul>
 </div>
 
+    <div class="tomorrow-enter">
+  <div class="te-title">🚨 明日進入處置 (05/25) — 9 檔 (+7檔衍生商品)</div>
+  <ul class="te-list"><li><span class="te-code">3675</span>德微 <span class="te-ind">二極體</span> <span class="te-measure">第一次處置</span></li>
+<li><span class="te-code">6742</span>澤米 <span class="te-ind">光學膜</span> <span class="te-measure">第一次處置</span></li>
+<li><span class="te-code">8027</span>鈦昇 <span class="te-ind">封測用設備</span> <span class="te-measure">第二次處置</span></li>
+<li><span class="te-code">6834</span>天二科技 <span class="te-ind">晶片電阻</span> <span class="te-measure">第一次處置</span></li>
+<li><span class="te-code">2911</span>麗嬰房 <span class="te-ind">未分類</span> <span class="te-measure">第一次處置</span></li>
+<li><span class="te-code">7610</span>聯友金屬-創 <span class="te-ind">未分類</span> <span class="te-measure">第二次處置</span></li>
+<li><span class="te-code">8291</span>尚茂 <span class="te-ind">銅箔基板</span> <span class="te-measure">第二次處置</span></li>
+<li><span class="te-code">5321</span>美而快 <span class="te-ind">電商平台</span> <span class="te-measure">第一次處置</span></li>
+<li><span class="te-code">6538</span>倉和 <span class="te-ind">電子其他</span> <span class="te-measure">第一次處置</span></li>
+</ul>
+</div>
+  </div>
 </div>
 
 <div class="stats">
@@ -133,14 +163,14 @@ function switchTab(tabName) {
   <table>
     <colgroup><col style="width:60px"><col style="width:72px"><col style="width:130px"><col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px"><col style="width:140px"><col style="width:135px"><col style="width:105px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
-    <tbody><tr><td class="code">8042</td><td>金山電</td><td class="pos wrap" title="MB、SPS、CRT用之鋁質電解電容器大廠">MB、SPS、CRT用之鋁質電解電容器大廠</td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/14～115/05/27</td><td class="status"><span class="tag-soon">剩 4 天 (05/28出關)</span></td></tr>
-<tr><td class="code">2492</td><td>華新科</td><td class="pos wrap" title="全球前五大MLCC廠">全球前五大MLCC廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">漲幅42.28% + 價差60.00元</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-near">剩 5 天 (05/29出關)</span></td></tr>
-<tr><td class="code">3026</td><td>禾伸堂</td><td class="pos wrap" title="主要自製MLCC及代理電子元件">主要自製MLCC及代理電子元件</td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span class="tag-soon">全面預收</span></td><td>收足自備款</td><td class="wrap">漲幅28.38% + 價差57.50元 + 月漲160.00%</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-near">剩 5 天 (05/29出關)</span></td></tr>
-<tr><td class="code">6173</td><td>信昌電</td><td class="pos wrap" title="華新科旗下的MLCC及瓷粉原料供應商">華新科旗下的MLCC及瓷粉原料供應商</td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-near">剩 5 天 (05/29出關)</span></td></tr>
-<tr><td class="code">3624</td><td>光頡</td><td class="pos wrap" title="利基型薄膜電阻廠">利基型薄膜電阻廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
-<tr><td class="code">3090</td><td>日電貿</td><td class="pos wrap" title="台灣最大的被動元件代理商">台灣最大的被動元件代理商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">漲幅52.99% + 價差73.00元 + 月漲115.00%</td><td>115/05/22～115/06/04</td><td class="status"><span class="tag-in">剩 12 天</span></td></tr>
-<tr><td class="code">6449</td><td>鈺邦</td><td class="pos wrap" title="全球前三大固態電容廠之一">全球前三大固態電容廠之一</td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span class="tag-soon">全面預收</span></td><td>收足自備款</td><td class="wrap">漲幅32.61% + 價差55.50元</td><td>115/05/22～115/06/04</td><td class="status"><span class="tag-in">剩 12 天</span></td></tr>
-<tr><td class="code">6834</td><td>天二科技</td><td class="pos wrap" title="被動元件貼片電阻製造商">被動元件貼片電阻製造商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">漲幅39.30% + 週轉率13.89% + 量6.69倍 + 月漲110.44%</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
+    <tbody><tr><td class="code">8042</td><td>金山電</td><td class="pos wrap" title="MB、SPS、CRT用之鋁質電解電容器大廠">MB、SPS、CRT用之鋁質電解電容器大廠</td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/14～115/05/27</td><td class="status"><span class="tag-soon">剩 4 天 (05/28出關)</span></td></tr>
+<tr><td class="code">2492</td><td>華新科</td><td class="pos wrap" title="全球前五大MLCC廠">全球前五大MLCC廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-near">剩 5 天 (05/29出關)</span></td></tr>
+<tr><td class="code">3026</td><td>禾伸堂</td><td class="pos wrap" title="主要自製MLCC及代理電子元件">主要自製MLCC及代理電子元件</td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span class="tag-soon">全面預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-near">剩 5 天 (05/29出關)</span></td></tr>
+<tr><td class="code">6173</td><td>信昌電</td><td class="pos wrap" title="華新科旗下的MLCC及瓷粉原料供應商">華新科旗下的MLCC及瓷粉原料供應商</td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-near">剩 5 天 (05/29出關)</span></td></tr>
+<tr><td class="code">3624</td><td>光頡</td><td class="pos wrap" title="利基型薄膜電阻廠">利基型薄膜電阻廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
+<tr><td class="code">3090</td><td>日電貿</td><td class="pos wrap" title="台灣最大的被動元件代理商">台灣最大的被動元件代理商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/05/22～115/06/04</td><td class="status"><span class="tag-in">剩 12 天</span></td></tr>
+<tr><td class="code">6449</td><td>鈺邦</td><td class="pos wrap" title="全球前三大固態電容廠之一">全球前三大固態電容廠之一</td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span class="tag-soon">全面預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/05/22～115/06/04</td><td class="status"><span class="tag-in">剩 12 天</span></td></tr>
+<tr><td class="code">6834</td><td>天二科技</td><td class="pos wrap" title="被動元件貼片電阻製造商">被動元件貼片電阻製造商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
 </tbody>
   </table>
 </div>
@@ -150,11 +180,11 @@ function switchTab(tabName) {
     <colgroup><col style="width:60px"><col style="width:72px"><col style="width:130px"><col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px"><col style="width:140px"><col style="width:135px"><col style="width:105px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
     <tbody><tr><td class="code">4991</td><td>環宇-KY</td><td class="pos wrap" title="全球III-V族專業晶圓代工廠">全球III-V族專業晶圓代工廠</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/11～115/05/22</td><td class="status"><span class="tag-out">05/23 09:00已出關</span></td></tr>
-<tr><td class="code">3016</td><td>嘉晶</td><td class="pos wrap" title="台灣專業磊晶矽晶圓業者">台灣專業磊晶矽晶圓業者</td><td>第二次處置</td><td>20分鐘</td><td><span class="tag-soon">全面預收</span></td><td>收足自備款</td><td class="wrap">漲幅37.51% + 月漲114.88%</td><td>115/05/12～115/05/25</td><td class="status"><span class="tag-soon">剩 2 天 (05/26出關)</span></td></tr>
-<tr><td class="code">6182</td><td>合晶</td><td class="pos wrap" title="台灣6吋及8吋矽晶圓製造商">台灣6吋及8吋矽晶圓製造商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/12～115/05/25</td><td class="status"><span class="tag-soon">剩 2 天 (05/26出關)</span></td></tr>
-<tr><td class="code">6488</td><td>環球晶</td><td class="pos wrap" title="全球第三大、台灣最大的矽晶圓廠商，從中美晶分割成立">全球第三大、台灣最大的矽晶圓廠商，從中美晶分割成立</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/12～115/05/25</td><td class="status"><span class="tag-soon">剩 2 天 (05/26出關)</span></td></tr>
+<tr><td class="code">3016</td><td>嘉晶</td><td class="pos wrap" title="台灣專業磊晶矽晶圓業者">台灣專業磊晶矽晶圓業者</td><td>第二次處置</td><td>20分鐘</td><td><span class="tag-soon">全面預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/05/12～115/05/25</td><td class="status"><span class="tag-soon">剩 2 天 (05/26出關)</span></td></tr>
+<tr><td class="code">6182</td><td>合晶</td><td class="pos wrap" title="台灣6吋及8吋矽晶圓製造商">台灣6吋及8吋矽晶圓製造商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/12～115/05/25</td><td class="status"><span class="tag-soon">剩 2 天 (05/26出關)</span></td></tr>
+<tr><td class="code">6488</td><td>環球晶</td><td class="pos wrap" title="全球第三大、台灣最大的矽晶圓廠商，從中美晶分割成立">全球第三大、台灣最大的矽晶圓廠商，從中美晶分割成立</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/12～115/05/25</td><td class="status"><span class="tag-soon">剩 2 天 (05/26出關)</span></td></tr>
 <tr><td class="code">4971</td><td>IET-KY</td><td class="pos wrap" title="以MBE技術製造III-V族磊晶廠">以MBE技術製造III-V族磊晶廠</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/19～115/06/01</td><td class="status"><span class="tag-in">剩 9 天</span></td></tr>
-<tr><td class="code">3675</td><td>德微</td><td class="pos wrap" title="台灣整流二極體供應商">台灣整流二極體供應商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
+<tr><td class="code">3675</td><td>德微</td><td class="pos wrap" title="台灣整流二極體供應商">台灣整流二極體供應商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
 </tbody>
   </table>
 </div>
@@ -163,11 +193,11 @@ function switchTab(tabName) {
   <table>
     <colgroup><col style="width:60px"><col style="width:72px"><col style="width:130px"><col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px"><col style="width:140px"><col style="width:135px"><col style="width:105px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
-    <tbody><tr><td class="code">3664</td><td>安瑞-KY</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>60分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/13～115/05/26</td><td class="status"><span class="tag-soon">剩 3 天 (05/27出關)</span></td></tr>
-<tr><td class="code">8444</td><td>綠河-KY</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>25分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/18～115/05/29</td><td class="status"><span class="tag-near">剩 6 天 (05/30出關)</span></td></tr>
-<tr><td class="code">6924</td><td>榮惠-KY創</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">漲幅38.49%</td><td>115/05/20～115/06/02</td><td class="status"><span class="tag-in">剩 10 天</span></td></tr>
-<tr><td class="code">2911</td><td>麗嬰房</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">漲幅57.24%</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
-<tr><td class="code">7610</td><td>聯友金屬-創</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>20分鐘</td><td><span class="tag-soon">全面預收</span></td><td>無限制</td><td class="wrap">漲幅37.87% + 價差302.00元 + 月漲151.25%</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
+    <tbody><tr><td class="code">3664</td><td>安瑞-KY</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>60分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/13～115/05/26</td><td class="status"><span class="tag-soon">剩 3 天 (05/27出關)</span></td></tr>
+<tr><td class="code">8444</td><td>綠河-KY</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>25分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/18～115/05/29</td><td class="status"><span class="tag-near">剩 6 天 (05/30出關)</span></td></tr>
+<tr><td class="code">6924</td><td>榮惠-KY創</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">連續3日達注意標準</td><td>115/05/20～115/06/02</td><td class="status"><span class="tag-in">剩 10 天</span></td></tr>
+<tr><td class="code">2911</td><td>麗嬰房</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">連續3日達注意標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
+<tr><td class="code">7610</td><td>聯友金屬-創</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>20分鐘</td><td><span class="tag-soon">全面預收</span></td><td>無限制</td><td class="wrap">連續3日達注意標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
 </tbody>
   </table>
 </div>
@@ -176,8 +206,8 @@ function switchTab(tabName) {
   <table>
     <colgroup><col style="width:60px"><col style="width:72px"><col style="width:130px"><col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px"><col style="width:140px"><col style="width:135px"><col style="width:105px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
-    <tbody><tr><td class="code">7769</td><td>鴻勁</td><td class="pos wrap" title="國內知名的半導體IC測試設備供應商">國內知名的半導體IC測試設備供應商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">漲幅29.26% + 價差1725.00元 + 月漲115.69%</td><td>115/05/14～115/05/27</td><td class="status"><span class="tag-soon">剩 4 天 (05/28出關)</span></td></tr>
-<tr><td class="code">7751</td><td>竑騰</td><td class="pos wrap" title="半導體封裝及檢測設備製造商">半導體封裝及檢測設備製造商</td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/18～115/05/29</td><td class="status"><span class="tag-near">剩 6 天 (05/30出關)</span></td></tr>
+    <tbody><tr><td class="code">7769</td><td>鴻勁</td><td class="pos wrap" title="國內知名的半導體IC測試設備供應商">國內知名的半導體IC測試設備供應商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">連續3日達注意標準</td><td>115/05/14～115/05/27</td><td class="status"><span class="tag-soon">剩 4 天 (05/28出關)</span></td></tr>
+<tr><td class="code">7751</td><td>竑騰</td><td class="pos wrap" title="半導體封裝及檢測設備製造商">半導體封裝及檢測設備製造商</td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/18～115/05/29</td><td class="status"><span class="tag-near">剩 6 天 (05/30出關)</span></td></tr>
 <tr><td class="code">8027</td><td>鈦昇</td><td class="pos wrap" title="專業於半導體、主機板、高階基板材料等設備廠商">專業於半導體、主機板、高階基板材料等設備廠商</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
 </tbody>
   </table>
@@ -187,9 +217,9 @@ function switchTab(tabName) {
   <table>
     <colgroup><col style="width:60px"><col style="width:72px"><col style="width:130px"><col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px"><col style="width:140px"><col style="width:135px"><col style="width:105px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
-    <tbody><tr><td class="code">1595</td><td>川寶</td><td class="pos wrap" title="全球知名PCB半自動曝光機廠">全球知名PCB半自動曝光機廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/11～115/05/22</td><td class="status"><span class="tag-out">05/23 09:00已出關</span></td></tr>
-<tr><td class="code">6829</td><td>千附精密</td><td class="pos wrap" title="精密零組件整合及半導體關鍵零組件製造商">精密零組件整合及半導體關鍵零組件製造商</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/18～115/05/29</td><td class="status"><span class="tag-near">剩 6 天 (05/30出關)</span></td></tr>
-<tr><td class="code">3498</td><td>陽程</td><td class="pos wrap" title="台灣PCB暨CCL、環境工程及物流等自動化設備廠">台灣PCB暨CCL、環境工程及物流等自動化設備廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/19～115/06/01</td><td class="status"><span class="tag-in">剩 9 天</span></td></tr>
+    <tbody><tr><td class="code">1595</td><td>川寶</td><td class="pos wrap" title="全球知名PCB半自動曝光機廠">全球知名PCB半自動曝光機廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/11～115/05/22</td><td class="status"><span class="tag-out">05/23 09:00已出關</span></td></tr>
+<tr><td class="code">6829</td><td>千附精密</td><td class="pos wrap" title="精密零組件整合及半導體關鍵零組件製造商">精密零組件整合及半導體關鍵零組件製造商</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/18～115/05/29</td><td class="status"><span class="tag-near">剩 6 天 (05/30出關)</span></td></tr>
+<tr><td class="code">3498</td><td>陽程</td><td class="pos wrap" title="台灣PCB暨CCL、環境工程及物流等自動化設備廠">台灣PCB暨CCL、環境工程及物流等自動化設備廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/19～115/06/01</td><td class="status"><span class="tag-in">剩 9 天</span></td></tr>
 </tbody>
   </table>
 </div>
@@ -198,8 +228,8 @@ function switchTab(tabName) {
   <table>
     <colgroup><col style="width:60px"><col style="width:72px"><col style="width:130px"><col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px"><col style="width:140px"><col style="width:135px"><col style="width:105px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
-    <tbody><tr><td class="code">3653</td><td>健策</td><td class="pos wrap" title="台灣均熱片兼LED導線架供應商">台灣均熱片兼LED導線架供應商</td><td>第二次處置</td><td>20分鐘</td><td><span class="tag-soon">全面預收</span></td><td>收足自備款</td><td class="wrap">跌幅28.01% + 價差775.00元</td><td>115/05/13～115/05/26</td><td class="status"><span class="tag-soon">剩 3 天 (05/27出關)</span></td></tr>
-<tr><td class="code">6831</td><td>邁科</td><td class="pos wrap" title="均溫板等散熱零組件及模組生產商">均溫板等散熱零組件及模組生產商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">漲幅27.24% + 價差185.00元</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-near">剩 5 天 (05/29出關)</span></td></tr>
+    <tbody><tr><td class="code">3653</td><td>健策</td><td class="pos wrap" title="台灣均熱片兼LED導線架供應商">台灣均熱片兼LED導線架供應商</td><td>第二次處置</td><td>20分鐘</td><td><span class="tag-soon">全面預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/05/13～115/05/26</td><td class="status"><span class="tag-soon">剩 3 天 (05/27出關)</span></td></tr>
+<tr><td class="code">6831</td><td>邁科</td><td class="pos wrap" title="均溫板等散熱零組件及模組生產商">均溫板等散熱零組件及模組生產商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">連續3日達注意標準</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-near">剩 5 天 (05/29出關)</span></td></tr>
 </tbody>
   </table>
 </div>
@@ -208,8 +238,8 @@ function switchTab(tabName) {
   <table>
     <colgroup><col style="width:60px"><col style="width:72px"><col style="width:130px"><col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px"><col style="width:140px"><col style="width:135px"><col style="width:105px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
-    <tbody><tr><td class="code">6274</td><td>台燿</td><td class="pos wrap" title="全球前十大銅箔基板廠之一">全球前十大銅箔基板廠之一</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/11～115/05/22</td><td class="status"><span class="tag-out">05/23 09:00已出關</span></td></tr>
-<tr><td class="code">8291</td><td>尚茂</td><td class="pos wrap" title="台灣利基型銅箔基板廠">台灣利基型銅箔基板廠</td><td>第二次處置 (累計4次)</td><td>25分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
+    <tbody><tr><td class="code">6274</td><td>台燿</td><td class="pos wrap" title="全球前十大銅箔基板廠之一">全球前十大銅箔基板廠之一</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/11～115/05/22</td><td class="status"><span class="tag-out">05/23 09:00已出關</span></td></tr>
+<tr><td class="code">8291</td><td>尚茂</td><td class="pos wrap" title="台灣利基型銅箔基板廠">台灣利基型銅箔基板廠</td><td>第二次處置 (累計4次)</td><td>25分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
 </tbody>
   </table>
 </div>
@@ -218,11 +248,11 @@ function switchTab(tabName) {
   <table>
     <colgroup><col style="width:60px"><col style="width:72px"><col style="width:130px"><col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px"><col style="width:140px"><col style="width:135px"><col style="width:105px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
-    <tbody><tr><td class="code">15952</td><td>川寶二</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/11～115/05/22</td><td class="status"><span class="tag-out">05/23 09:00已出關</span></td></tr>
-<tr><td class="code">62745</td><td>台燿五</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/11～115/05/22</td><td class="status"><span class="tag-out">05/23 09:00已出關</span></td></tr>
+    <tbody><tr><td class="code">15952</td><td>川寶二</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/11～115/05/22</td><td class="status"><span class="tag-out">05/23 09:00已出關</span></td></tr>
+<tr><td class="code">62745</td><td>台燿五</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/11～115/05/22</td><td class="status"><span class="tag-out">05/23 09:00已出關</span></td></tr>
 <tr><td class="code">30165</td><td>嘉晶五</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/12～115/05/25</td><td class="status"><span class="tag-soon">剩 2 天 (05/26出關)</span></td></tr>
 <tr><td class="code">61827</td><td>合晶七</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/12～115/05/25</td><td class="status"><span class="tag-soon">剩 2 天 (05/26出關)</span></td></tr>
-<tr><td class="code">61828</td><td>合晶八</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/12～115/05/25</td><td class="status"><span class="tag-soon">剩 2 天 (05/26出關)</span></td></tr>
+<tr><td class="code">61828</td><td>合晶八</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/12～115/05/25</td><td class="status"><span class="tag-soon">剩 2 天 (05/26出關)</span></td></tr>
 <tr><td class="code">911608</td><td>明輝-DR</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/13～115/05/26</td><td class="status"><span class="tag-soon">剩 3 天 (05/27出關)</span></td></tr>
 <tr><td class="code">49793</td><td>華星光三</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/13～115/05/26</td><td class="status"><span class="tag-soon">剩 3 天 (05/27出關)</span></td></tr>
 <tr><td class="code">49794</td><td>華星光四</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/13～115/05/26</td><td class="status"><span class="tag-soon">剩 3 天 (05/27出關)</span></td></tr>
@@ -230,16 +260,16 @@ function switchTab(tabName) {
 <tr><td class="code">80426</td><td>金山電六</td><td class="pos wrap" title=""></td><td>第二次處置 (累計3次)</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">10日內6次達注意標準</td><td>115/05/14～115/05/27</td><td class="status"><span class="tag-soon">剩 4 天 (05/28出關)</span></td></tr>
 <tr><td class="code">31351</td><td>凌航一</td><td class="pos wrap" title=""></td><td>第一次處置 (累計2次)</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/18～115/05/29</td><td class="status"><span class="tag-near">剩 6 天 (05/30出關)</span></td></tr>
 <tr><td class="code">31352</td><td>凌航二</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/18～115/05/29</td><td class="status"><span class="tag-near">剩 6 天 (05/30出關)</span></td></tr>
-<tr><td class="code">725744</td><td>新復興統一5A購01</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/19～115/06/01</td><td class="status"><span class="tag-in">剩 9 天</span></td></tr>
+<tr><td class="code">725744</td><td>新復興統一5A購01</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/19～115/06/01</td><td class="status"><span class="tag-in">剩 9 天</span></td></tr>
 <tr><td class="code">68061</td><td>森崴能源一</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>60分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
-<tr><td class="code">722723</td><td>新復興統一58購02</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
-<tr><td class="code">724481</td><td>正基統一59購02</td><td class="pos wrap" title=""></td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
-<tr><td class="code">80914</td><td>翔名四</td><td class="pos wrap" title=""></td><td>第一次處置 (累計2次)</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
-<tr><td class="code">058462</td><td>汎銓元大59購05</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">漲幅55.13%</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
-<tr><td class="code">49165</td><td>事欣科五</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
+<tr><td class="code">722723</td><td>新復興統一58購02</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
+<tr><td class="code">724481</td><td>正基統一59購02</td><td class="pos wrap" title=""></td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
+<tr><td class="code">80914</td><td>翔名四</td><td class="pos wrap" title=""></td><td>第一次處置 (累計2次)</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
+<tr><td class="code">058462</td><td>汎銓元大59購05</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">連續3日達注意標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
+<tr><td class="code">49165</td><td>事欣科五</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
 <tr><td class="code">53211</td><td>美而快一</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
 <tr><td class="code">65381</td><td>倉和一</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
-<tr><td class="code">72381U</td><td>萬潤群益56售01</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
+<tr><td class="code">72381U</td><td>萬潤群益56售01</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
 <tr><td class="code">76101</td><td>聯友金屬一創</td><td class="pos wrap" title=""></td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
 <tr><td class="code">80273</td><td>鈦昇三</td><td class="pos wrap" title=""></td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
 </tbody>
@@ -278,30 +308,30 @@ function switchTab(tabName) {
 <col style="width:140px"><col style="width:135px"><col style="width:105px">
 </colgroup>
   <thead><tr><th>代號</th><th>名稱</th><th>產業</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
-  <tbody><tr><td class="code">8227</td><td>巨有科技</td><td>ASIC</td><td class="pos wrap" title="台灣最早成立之IC 設計服務公司">台灣最早成立之IC 設計服務公司</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/12～115/05/25</td><td class="status"><span class="tag-soon">剩 2 天 (05/26出關)</span></td></tr>
+  <tbody><tr><td class="code">8227</td><td>巨有科技</td><td>ASIC</td><td class="pos wrap" title="台灣最早成立之IC 設計服務公司">台灣最早成立之IC 設計服務公司</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/12～115/05/25</td><td class="status"><span class="tag-soon">剩 2 天 (05/26出關)</span></td></tr>
 <tr><td class="code">3450</td><td>聯鈞</td><td>IC封裝</td><td class="pos wrap" title="全球前三大雷射二極體封測代工廠">全球前三大雷射二極體封測代工廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/05/13～115/05/26</td><td class="status"><span class="tag-soon">剩 3 天 (05/27出關)</span></td></tr>
-<tr><td class="code">8114</td><td>振樺電</td><td>POS機系統</td><td class="pos wrap" title="全球前五大POS品牌廠之一">全球前五大POS品牌廠之一</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">漲幅31.64% + 價差59.50元</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-in">剩 5 天</span></td></tr>
-<tr><td class="code">6742</td><td>澤米</td><td>光學膜</td><td class="pos wrap" title="光學鍍膜及半導體鍍膜公司">光學鍍膜及半導體鍍膜公司</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">漲幅38.62% + 週轉率14.44% + 量9.86倍</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
-<tr><td class="code">3008</td><td>大立光</td><td>光學鏡片／頭</td><td class="pos wrap" title="全球智慧型手機鏡頭龍頭廠">全球智慧型手機鏡頭龍頭廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">漲幅29.44% + 價差570.00元</td><td>115/05/20～115/06/02</td><td class="status"><span class="tag-in">剩 10 天</span></td></tr>
+<tr><td class="code">8114</td><td>振樺電</td><td>POS機系統</td><td class="pos wrap" title="全球前五大POS品牌廠之一">全球前五大POS品牌廠之一</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-in">剩 5 天</span></td></tr>
+<tr><td class="code">6742</td><td>澤米</td><td>光學膜</td><td class="pos wrap" title="光學鍍膜及半導體鍍膜公司">光學鍍膜及半導體鍍膜公司</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
+<tr><td class="code">3008</td><td>大立光</td><td>光學鏡片／頭</td><td class="pos wrap" title="全球智慧型手機鏡頭龍頭廠">全球智慧型手機鏡頭龍頭廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/05/20～115/06/02</td><td class="status"><span class="tag-in">剩 10 天</span></td></tr>
 <tr><td class="code">4979</td><td>華星光</td><td>光纖主動元件</td><td class="pos wrap" title="台灣光收發模組一貫廠">台灣光收發模組一貫廠</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/13～115/05/26</td><td class="status"><span class="tag-soon">剩 3 天 (05/27出關)</span></td></tr>
-<tr><td class="code">2059</td><td>川湖</td><td>其他電子零件</td><td class="pos wrap" title="全球知名伺服器導軌廠">全球知名伺服器導軌廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">漲幅25.01% + 價差850.00元</td><td>115/05/13～115/05/26</td><td class="status"><span class="tag-soon">剩 3 天 (05/27出關)</span></td></tr>
-<tr><td class="code">6263</td><td>普萊德</td><td>區域網路</td><td class="pos wrap" title="以PLANET品牌行銷的網通設備廠">以PLANET品牌行銷的網通設備廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-in">剩 5 天</span></td></tr>
-<tr><td class="code">8091</td><td>翔名</td><td>半導體製程設備</td><td class="pos wrap" title="台灣半導體離子植入機之關鍵零件最大供應商">台灣半導體離子植入機之關鍵零件最大供應商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/20～115/06/02</td><td class="status"><span class="tag-in">剩 10 天</span></td></tr>
-<tr><td class="code">5464</td><td>霖宏</td><td>印刷電路板</td><td class="pos wrap" title="LCD TV">LCD TV</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/14～115/05/27</td><td class="status"><span class="tag-soon">剩 4 天 (05/28出關)</span></td></tr>
+<tr><td class="code">2059</td><td>川湖</td><td>其他電子零件</td><td class="pos wrap" title="全球知名伺服器導軌廠">全球知名伺服器導軌廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/05/13～115/05/26</td><td class="status"><span class="tag-soon">剩 3 天 (05/27出關)</span></td></tr>
+<tr><td class="code">6263</td><td>普萊德</td><td>區域網路</td><td class="pos wrap" title="以PLANET品牌行銷的網通設備廠">以PLANET品牌行銷的網通設備廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-in">剩 5 天</span></td></tr>
+<tr><td class="code">8091</td><td>翔名</td><td>半導體製程設備</td><td class="pos wrap" title="台灣半導體離子植入機之關鍵零件最大供應商">台灣半導體離子植入機之關鍵零件最大供應商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/20～115/06/02</td><td class="status"><span class="tag-in">剩 10 天</span></td></tr>
+<tr><td class="code">5464</td><td>霖宏</td><td>印刷電路板</td><td class="pos wrap" title="LCD TV">LCD TV</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/14～115/05/27</td><td class="status"><span class="tag-soon">剩 4 天 (05/28出關)</span></td></tr>
 <tr><td class="code">4561</td><td>健椿</td><td>工具機主軸</td><td class="pos wrap" title="台灣知名的工具機精密主軸製造廠">台灣知名的工具機精密主軸製造廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/12～115/05/25</td><td class="status"><span class="tag-soon">剩 2 天 (05/26出關)</span></td></tr>
-<tr><td class="code">6806</td><td>森崴能源</td><td>工程顧問</td><td class="pos wrap" title="正崴集團旗下，能源工程及整合服務商">正崴集團旗下，能源工程及整合服務商</td><td>人工管制撮合</td><td>六十分鐘</td><td><span>無</span></td><td>無限制</td><td class="wrap">跌幅59.12%</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
+<tr><td class="code">6806</td><td>森崴能源</td><td>工程顧問</td><td class="pos wrap" title="正崴集團旗下，能源工程及整合服務商">正崴集團旗下，能源工程及整合服務商</td><td>人工管制撮合</td><td>六十分鐘</td><td><span>無</span></td><td>無限制</td><td class="wrap">連續3日達注意標準</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
 <tr><td class="code">6217</td><td>中探針</td><td>探針、探針卡</td><td class="pos wrap" title="台灣第一家探針及探針式連接器製造廠">台灣第一家探針及探針式連接器製造廠</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/20～115/06/02</td><td class="status"><span class="tag-in">剩 10 天</span></td></tr>
-<tr><td class="code">1591</td><td>駿吉-KY</td><td>螺絲螺帽</td><td class="pos wrap" title="東南亞最大氣動式工業用槍釘供應商">東南亞最大氣動式工業用槍釘供應商</td><td>第二次處置</td><td>25分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
-<tr><td class="code">3135</td><td>凌航</td><td>記憶體模組</td><td class="pos wrap" title="台灣記憶體模組生產商">台灣記憶體模組生產商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">漲幅25.35% + 週轉率10.09%</td><td>115/05/18～115/05/29</td><td class="status"><span class="tag-in">剩 6 天</span></td></tr>
-<tr><td class="code">3665</td><td>貿聯-KY</td><td>連接線材</td><td class="pos wrap" title="Tesla電池線束主力供應商">Tesla電池線束主力供應商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">跌幅33.09% + 價差535.00元</td><td>115/05/20～115/06/02</td><td class="status"><span class="tag-in">剩 10 天</span></td></tr>
-<tr><td class="code">1809</td><td>中釉</td><td>釉料</td><td class="pos wrap" title="亞洲最大色釉料廠">亞洲最大色釉料廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">漲幅37.27% + 週轉率20.50%</td><td>115/05/13～115/05/26</td><td class="status"><span class="tag-soon">剩 3 天 (05/27出關)</span></td></tr>
+<tr><td class="code">1591</td><td>駿吉-KY</td><td>螺絲螺帽</td><td class="pos wrap" title="東南亞最大氣動式工業用槍釘供應商">東南亞最大氣動式工業用槍釘供應商</td><td>第二次處置</td><td>25分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
+<tr><td class="code">3135</td><td>凌航</td><td>記憶體模組</td><td class="pos wrap" title="台灣記憶體模組生產商">台灣記憶體模組生產商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">達注意交易資訊標準</td><td>115/05/18～115/05/29</td><td class="status"><span class="tag-in">剩 6 天</span></td></tr>
+<tr><td class="code">3665</td><td>貿聯-KY</td><td>連接線材</td><td class="pos wrap" title="Tesla電池線束主力供應商">Tesla電池線束主力供應商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/05/20～115/06/02</td><td class="status"><span class="tag-in">剩 10 天</span></td></tr>
+<tr><td class="code">1809</td><td>中釉</td><td>釉料</td><td class="pos wrap" title="亞洲最大色釉料廠">亞洲最大色釉料廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/05/13～115/05/26</td><td class="status"><span class="tag-soon">剩 3 天 (05/27出關)</span></td></tr>
 <tr><td class="code">8358</td><td>金居</td><td>銅箔</td><td class="pos wrap" title="台灣前三大電解銅箔製造商">台灣前三大電解銅箔製造商</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-in">剩 5 天</span></td></tr>
-<tr><td class="code">5321</td><td>美而快</td><td>電商平台</td><td class="pos wrap" title="台灣服飾電商業者">台灣服飾電商業者</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
-<tr><td class="code">8455</td><td>大拓-KY</td><td>電子元件代理商</td><td class="pos wrap" title="國內知名的電機、電子零組件代理經銷商">國內知名的電機、電子零組件代理經銷商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
-<tr><td class="code">6538</td><td>倉和</td><td>電子其他</td><td class="pos wrap" title="國內最大的太陽能精密網版廠">國內最大的太陽能精密網版廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
-<tr><td class="code">8069</td><td>元太</td><td>電子紙</td><td class="pos wrap" title="全球電子紙龍頭廠">全球電子紙龍頭廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-in">剩 5 天</span></td></tr>
-<tr><td class="code">5228</td><td>鈺鎧</td><td>電感</td><td class="pos wrap" title="國內專業磁性被動元件製造廠">國內專業磁性被動元件製造廠</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/18～115/05/29</td><td class="status"><span class="tag-in">剩 6 天</span></td></tr>
-<tr><td class="code">4966</td><td>譜瑞-KY</td><td>高速傳輸介面IC</td><td class="pos wrap" title="專攻高速訊號傳輸介面及顯示晶片廠商">專攻高速訊號傳輸介面及顯示晶片廠商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">股價漲跌幅/週轉率異常</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-in">剩 5 天</span></td></tr>
+<tr><td class="code">5321</td><td>美而快</td><td>電商平台</td><td class="pos wrap" title="台灣服飾電商業者">台灣服飾電商業者</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
+<tr><td class="code">8455</td><td>大拓-KY</td><td>電子元件代理商</td><td class="pos wrap" title="國內知名的電機、電子零組件代理經銷商">國內知名的電機、電子零組件代理經銷商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/21～115/06/03</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
+<tr><td class="code">6538</td><td>倉和</td><td>電子其他</td><td class="pos wrap" title="國內最大的太陽能精密網版廠">國內最大的太陽能精密網版廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/25～115/06/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
+<tr><td class="code">8069</td><td>元太</td><td>電子紙</td><td class="pos wrap" title="全球電子紙龍頭廠">全球電子紙龍頭廠</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-in">剩 5 天</span></td></tr>
+<tr><td class="code">5228</td><td>鈺鎧</td><td>電感</td><td class="pos wrap" title="國內專業磁性被動元件製造廠">國內專業磁性被動元件製造廠</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/18～115/05/29</td><td class="status"><span class="tag-in">剩 6 天</span></td></tr>
+<tr><td class="code">4966</td><td>譜瑞-KY</td><td>高速傳輸介面IC</td><td class="pos wrap" title="專攻高速訊號傳輸介面及顯示晶片廠商">專攻高速訊號傳輸介面及顯示晶片廠商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/05/15～115/05/28</td><td class="status"><span class="tag-in">剩 5 天</span></td></tr>
 </tbody>
 </table>
 </div>
