@@ -485,14 +485,14 @@ def print_console_report(records, analysis, exit_days):
 def _build_html_template():
     """回傳 HTML 模板字串（深色主題，參考 aistockmap.com 風格）"""
     colgroup = """<colgroup>
-<col style="width:50px"><col style="width:62px"><col style="width:110px">
-<col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px">
-<col style="width:130px"><col style="width:120px"><col style="width:90px">
+<col style="width:60px"><col style="width:72px"><col style="width:130px">
+<col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px">
+<col style="width:140px"><col style="width:135px"><col style="width:105px">
 </colgroup>"""
     colgroup_singles = """<colgroup>
-<col style="width:50px"><col style="width:62px"><col style="width:72px"><col style="width:95px">
-<col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px">
-<col style="width:130px"><col style="width:120px"><col style="width:90px">
+<col style="width:60px"><col style="width:72px"><col style="width:85px"><col style="width:110px">
+<col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px">
+<col style="width:140px"><col style="width:135px"><col style="width:105px">
 </colgroup>"""
     return """<!DOCTYPE html>
 <html lang="zh-TW"><head><meta charset="utf-8">
@@ -500,32 +500,32 @@ def _build_html_template():
 <title>處置股追蹤 {report_date}</title>
 <style>
   * {{ box-sizing: border-box; margin:0; padding:0; }}
-  body {{ font-family: -apple-system,'Microsoft JhengHei','Noto Sans TC','Segoe UI',sans-serif; background:#0f172a; color:#e2e8f0; font-size:14px; line-height:1.6; }}
-  .container {{ max-width:1200px; margin:0 auto; padding:1.5em 1.2em; }}
+  body {{ font-family: -apple-system,'Microsoft JhengHei','Noto Sans TC','Segoe UI',sans-serif; background:#0f172a; color:#e2e8f0; font-size:15px; line-height:1.7; }}
+  .container {{ max-width:1440px; margin:0 auto; padding:2em 2.5em; }}
 
   /* Header */
   .header-wrap {{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1em; margin-bottom:1.5em; }}
   .header-left {{ flex:1; min-width:0; }}
-  .header-left h1 {{ font-size:1.6em; font-weight:700; color:#f8fafc; margin-bottom:0.3em; }}
+  .header-left h1 {{ font-size:2em; font-weight:700; color:#f8fafc; margin-bottom:0.35em; letter-spacing:0.02em; }}
   .header-left h1 span {{ background:linear-gradient(135deg,#a78bfa,#818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }}
-  .subtitle {{ color:#64748b; font-size:0.85em; }}
+  .subtitle {{ color:#64748b; font-size:0.9em; }}
 
   /* Tomorrow Exit Card */
-  .tomorrow-exit {{ background:#1e293b; border:1px solid #f87171; border-left:4px solid #ef4444; border-radius:10px; padding:0.8em 1em; min-width:220px; max-width:340px; }}
-  .tomorrow-exit .te-title {{ font-weight:700; color:#f87171; font-size:0.95em; margin-bottom:0.4em; display:flex; align-items:center; gap:0.4em; }}
+  .tomorrow-exit {{ background:#1e293b; border:1px solid #f87171; border-left:4px solid #ef4444; border-radius:10px; padding:1em 1.3em; min-width:240px; max-width:380px; }}
+  .tomorrow-exit .te-title {{ font-weight:700; color:#f87171; font-size:1.05em; margin-bottom:0.5em; display:flex; align-items:center; gap:0.5em; }}
   .tomorrow-exit .te-list {{ list-style:none; }}
-  .tomorrow-exit .te-list li {{ padding:3px 0; font-size:0.85em; color:#e2e8f0; border-bottom:1px solid #334155; }}
+  .tomorrow-exit .te-list li {{ padding:5px 0; font-size:0.92em; color:#e2e8f0; border-bottom:1px solid #334155; }}
   .tomorrow-exit .te-list li:last-child {{ border-bottom:none; }}
   .tomorrow-exit .te-list .te-code {{ font-weight:700; color:#fbbf24; margin-right:6px; }}
   .tomorrow-exit .te-list .te-ind {{ color:#94a3b8; font-size:0.8em; margin-left:4px; }}
-  .tomorrow-exit .te-none {{ color:#475569; font-size:0.85em; }}
+  .tomorrow-exit .te-none {{ color:#475569; font-size:0.9em; }}
   .tomorrow-exit.empty {{ border-color:#334155; border-left-color:#475569; }}
 
   /* Stats Row */
-  .stats {{ display:flex; gap:0.6em; margin-bottom:1.8em; flex-wrap:wrap; }}
-  .stat-card {{ background:#1e293b; border-radius:8px; padding:0.7em 1em; min-width:110px; border:1px solid #334155; }}
-  .stat-card .num {{ font-size:1.7em; font-weight:700; line-height:1.2; }}
-  .stat-card .label {{ color:#94a3b8; font-size:0.75em; margin-top:2px; }}
+  .stats {{ display:flex; gap:0.8em; margin-bottom:2em; flex-wrap:wrap; }}
+  .stat-card {{ background:#1e293b; border-radius:10px; padding:1em 1.4em; min-width:140px; flex:1; border:1px solid #334155; }}
+  .stat-card .num {{ font-size:2.2em; font-weight:700; line-height:1.2; }}
+  .stat-card .label {{ color:#94a3b8; font-size:0.85em; margin-top:4px; }}
   .stat-card.danger .num {{ color:#f87171; }}
   .stat-card.warn .num {{ color:#fbbf24; }}
   .stat-card.info .num {{ color:#60a5fa; }}
@@ -533,48 +533,53 @@ def _build_html_template():
 
   /* Section */
   .section {{ margin-bottom:2em; }}
-  .section-title {{ font-size:1.05em; font-weight:700; color:#f8fafc; margin-bottom:0.8em; padding-left:10px; border-left:3px solid #818cf8; }}
+  .section-title {{ font-size:1.25em; font-weight:700; color:#f8fafc; margin-bottom:1em; padding-left:12px; border-left:4px solid #818cf8; }}
 
   /* Cluster Cards */
-  .cluster-card {{ background:#1e293b; border-radius:10px; padding:1em; margin-bottom:0.8em; border:1px solid #334155; transition:border-color 0.2s; }}
+  .cluster-card {{ background:#1e293b; border-radius:10px; padding:1.2em 1.5em; margin-bottom:1em; border:1px solid #334155; transition:border-color 0.2s; }}
   .cluster-card:hover {{ border-color:#475569; }}
-  .cluster-card h3 {{ margin:0 0 0.6em; font-size:0.95em; color:#f8fafc; }}
-  .badge {{ display:inline-block; color:#fff; padding:2px 10px; border-radius:12px; font-size:0.78em; margin-right:6px; font-weight:600; }}
+  .cluster-card h3 {{ margin:0 0 0.8em; font-size:1.1em; color:#f8fafc; }}
+  .badge {{ display:inline-block; color:#fff; padding:3px 12px; border-radius:12px; font-size:0.85em; margin-right:8px; font-weight:600; }}
 
   /* Tables */
   table {{ border-collapse:collapse; width:100%; table-layout:fixed; }}
-  thead th {{ background:#0f172a; color:#94a3b8; padding:6px 6px; text-align:left; font-weight:500; font-size:0.78em; white-space:nowrap; overflow:hidden; border-bottom:1px solid #334155; position:sticky; top:0; }}
-  tbody td {{ padding:5px 6px; border-bottom:1px solid #1e293b; font-size:0.78em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:top; color:#cbd5e1; }}
+  thead th {{ background:#0f172a; color:#94a3b8; padding:8px 8px; text-align:left; font-weight:600; font-size:0.9em; white-space:nowrap; overflow:hidden; border-bottom:2px solid #334155; position:sticky; top:0; }}
+  tbody td {{ padding:8px 8px; border-bottom:1px solid #2d3a4d; font-size:0.9em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:top; color:#cbd5e1; }}
   tbody td.wrap {{ white-space:normal; word-break:break-all; }}
   tbody tr:hover {{ background:#334155; }}
-  .code {{ font-weight:700; color:#fbbf24; }}
+  .code {{ font-weight:700; color:#fbbf24; font-size:1em; }}
 
   /* Status Tags */
   .status {{ text-align:center; white-space:nowrap; }}
-  .tag-out {{ background:#1e293b; color:#475569; padding:2px 8px; border-radius:4px; font-size:0.75em; border:1px solid #334155; }}
-  .tag-soon {{ background:rgba(239,68,68,0.15); color:#f87171; padding:2px 8px; border-radius:4px; font-size:0.75em; font-weight:600; border:1px solid rgba(239,68,68,0.3); }}
-  .tag-near {{ background:rgba(251,191,36,0.12); color:#fbbf24; padding:2px 8px; border-radius:4px; font-size:0.75em; border:1px solid rgba(251,191,36,0.25); }}
-  .tag-in {{ background:rgba(96,165,250,0.1); color:#60a5fa; padding:2px 8px; border-radius:4px; font-size:0.75em; border:1px solid rgba(96,165,250,0.2); }}
+  .tag-out {{ background:#1e293b; color:#475569; padding:3px 10px; border-radius:4px; font-size:0.82em; border:1px solid #334155; }}
+  .tag-soon {{ background:rgba(239,68,68,0.15); color:#f87171; padding:3px 10px; border-radius:4px; font-size:0.82em; font-weight:600; border:1px solid rgba(239,68,68,0.3); }}
+  .tag-near {{ background:rgba(251,191,36,0.12); color:#fbbf24; padding:3px 10px; border-radius:4px; font-size:0.82em; border:1px solid rgba(251,191,36,0.25); }}
+  .tag-in {{ background:rgba(96,165,250,0.1); color:#60a5fa; padding:3px 10px; border-radius:4px; font-size:0.82em; border:1px solid rgba(96,165,250,0.2); }}
   .highlight {{ background:rgba(251,191,36,0.08) !important; }}
   .highlight td {{ font-weight:600; color:#fbbf24; }}
-  .pos {{ font-size:0.75em; color:#94a3b8; }}
+  .pos {{ font-size:0.85em; color:#94a3b8; }}
 
   /* Footer */
-  .footer {{ margin-top:2.5em; color:#475569; font-size:0.78em; text-align:center; padding:1em 0; border-top:1px solid #1e293b; }}
+  .footer {{ margin-top:3em; color:#475569; font-size:0.85em; text-align:center; padding:1.2em 0; border-top:1px solid #1e293b; }}
 
   .empty-state {{ text-align:center; padding:3em; color:#475569; }}
 
   /* Related sub-industry tags */
-  .related-tag {{ background:#334155; color:#94a3b8; padding:2px 8px; border-radius:4px; font-size:0.72em; display:inline-block; margin:2px 3px 2px 0; }}
+  .related-tag {{ background:#334155; color:#94a3b8; padding:3px 10px; border-radius:4px; font-size:0.82em; display:inline-block; margin:3px 4px 3px 0; }}
 
   /* Responsive */
   @media (max-width:768px) {{
-    .stats {{ gap:0.4em; }}
-    .stat-card {{ min-width:80px; padding:0.5em 0.7em; }}
-    .stat-card .num {{ font-size:1.3em; }}
+    .container {{ padding:1em; }}
+    .stats {{ gap:0.5em; }}
+    .stat-card {{ min-width:100px; padding:0.7em 0.8em; }}
+    .stat-card .num {{ font-size:1.6em; }}
     .header-wrap {{ flex-direction:column; }}
     .tomorrow-exit {{ max-width:100%; }}
-    table {{ font-size:0.72em; }}
+    table {{ font-size:0.82em; }}
+    thead th, tbody td {{ padding:6px; }}
+  }}
+  @media (min-width:1600px) {{
+    .container {{ max-width:1560px; }}
   }}
 </style>
 <script>
@@ -611,7 +616,7 @@ function switchTab(tabName) {{
 
 <div class="section">
 <div class="section-title">出關時間軸</div>
-<p style="color:#64748b;font-size:0.82em;margin:-0.4em 0 0.8em 0">同日多檔出關（黃底標示），流動性同時恢復，若題材仍在則資金可能回補。</p>
+<p style="color:#64748b;font-size:0.9em;margin:-0.4em 0 1em 0">同日多檔出關（黃底標示），流動性同時恢復，若題材仍在則資金可能回補。</p>
 <div class="cluster-card">
 <table>
   <thead><tr><th style="width:90px">出關日</th><th style="width:70px">倒數</th><th style="width:50px">檔數</th><th>個股</th></tr></thead>
@@ -692,7 +697,7 @@ def generate_html_report(records, analysis, exit_days):
 <div class="cluster-card">
   <h3><span class="badge" style="background:{badge_color}">處置 {count}</span> {ind}{total_str}</h3>{related_tags}
   <table>
-    <colgroup><col style="width:50px"><col style="width:62px"><col style="width:110px"><col style="width:65px"><col style="width:48px"><col style="width:55px"><col style="width:60px"><col style="width:130px"><col style="width:120px"><col style="width:80px"></colgroup>
+    <colgroup><col style="width:60px"><col style="width:72px"><col style="width:130px"><col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px"><col style="width:140px"><col style="width:135px"><col style="width:105px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
     <tbody>{rows}</tbody>
   </table>
