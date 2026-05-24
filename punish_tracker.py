@@ -222,6 +222,92 @@ def _extract_measures(content):
 
 # ---- 產業分類 ----
 
+
+def fetch_attention_details(records):
+    """為每檔 TWSE 股票抓取注意交易資訊的具體觸發條件（漲幅、週轉率等）"""
+    import time
+    for r in records:
+        code = r["code"]
+        if r.get("market") != "上市":
+            # TPEx: 從 condition 欄位解析
+            cond = r.get("condition", "")
+            if "第一款" in cond:
+                r["attention_detail"] = "股價漲跌幅/週轉率異常"
+            elif "第二款" in cond:
+                r["attention_detail"] = "成交量集中異常"
+            elif "第三款" in cond:
+                r["attention_detail"] = "融資融券異常"
+            else:
+                r["attention_detail"] = ""
+            continue
+        # TWSE: 呼叫注意交易資訊 API
+        try:
+            if r.get("start"):
+                sd = r["start"] - __import__("datetime").timedelta(days=30)
+                start_str = sd.strftime("%Y%m%d")
+            else:
+                start_str = "20260401"
+            if r.get("end"):
+                end_str = r["start"].strftime("%Y%m%d") if r.get("start") else "20260524"
+            else:
+                end_str = "20260524"
+            url = f"https://www.twse.com.tw/rwd/zh/announcement/notice?querytype=2&startDate={start_str}&endDate={end_str}&stockNo={code}&response=json"
+            resp = requests.get(url, headers=HEADERS, timeout=10)
+            d = resp.json()
+            if d.get("stat") == "OK" and d.get("data"):
+                # 取最近一筆
+                latest = d["data"][0]
+                detail_raw = latest[4]  # 注意交易資訊欄位
+                r["attention_detail"] = _parse_attention_text(detail_raw)
+            else:
+                r["attention_detail"] = ""
+            time.sleep(0.3)  # 避免太頻繁
+        except Exception as e:
+            print(f"  注意資訊查詢失敗 {code}: {e}")
+            r["attention_detail"] = ""
+
+
+def _parse_attention_text(text):
+    """解析注意交易資訊文字，提取關鍵數據"""
+    parts = []
+    # 漲幅
+    m = re.search(r'累積收盤價漲幅達([\d.]+)%', text)
+    if m:
+        parts.append(f"漲幅{m.group(1)}%")
+    # 跌幅
+    m = re.search(r'累積收盤價跌幅達([\d.]+)%', text)
+    if m:
+        parts.append(f"跌幅{m.group(1)}%")
+    # 週轉率
+    m = re.search(r'週轉率為([\d.]+)%', text)
+    if m:
+        parts.append(f"週轉率{m.group(1)}%")
+    # 成交量倍數
+    m = re.search(r'日平均成交量之([\d.]+)倍', text)
+    if m:
+        parts.append(f"量{m.group(1)}倍")
+    # 券商集中
+    m = re.search(r'([一-鿿]+證券商)買進之比率為([\d.]+)%', text)
+    if m:
+        parts.append(f"{m.group(1)}集中{m.group(2)}%")
+    # 價差
+    m = re.search(r'收盤價價差達([\d.]+)\s*元', text)
+    if m:
+        parts.append(f"價差{m.group(1)}元")
+    # 30日漲幅
+    m = re.search(r'三十個營業日.*?收盤價漲幅達([\d.]+)%', text)
+    if m:
+        parts.append(f"月漲{m.group(1)}%")
+    # 款別
+    clauses = re.findall(r'﹝第([一二三四五六七八九十]+)款﹞', text)
+    if not parts and clauses:
+        clause_map = {"一":"價格異常","二":"成交量異常","三":"成交量暴增","四":"週轉率異常","五":"券商集中"}
+        for c in clauses:
+            if c in clause_map:
+                parts.append(clause_map[c])
+
+    return " + ".join(parts) if parts else ""
+
 def load_sub_industry_csv():
     """從系產業 CSV 載入細產業、所有細產業、產業地位"""
     # 優先找新版 CSV
@@ -380,30 +466,82 @@ def analyze_clusters(records, industry_map, exit_days=7):
             r["market_cap"] = ""
             r["all_subs"] = []
 
-    # 直接用細產業分群
+    # 智慧族群合併：用 all_subs 交集找出真正同族群的股票
     real_stocks = [r for r in records if r["industry"] != "衍生商品"]
 
-    # 建立 子產業 -> 處置股 映射（用於交叉關聯顯示）
+    # 建立 子產業 -> 處置股 映射
     sub_to_stocks = defaultdict(set)
     for r in real_stocks:
         for sub in r["all_subs"]:
             sub_to_stocks[sub].add(r["code"])
 
-    # 以細產業為主要分群
+    # 找出有 >=2 檔處置股共用的子產業（有意義的聚集）
+    shared_subs = {sub: codes for sub, codes in sub_to_stocks.items() if len(codes) >= 2}
+
+    # Union-Find 合併：共享子產業的股票歸為同一族群
+    code_to_group = {}  # code -> group_leader
+    def find(c):
+        while code_to_group.get(c, c) != c:
+            code_to_group[c] = code_to_group.get(code_to_group[c], code_to_group[c])
+            c = code_to_group[c]
+        return c
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            code_to_group[ra] = rb
+
+    for sub, codes in shared_subs.items():
+        codes_list = sorted(codes)
+        for i in range(1, len(codes_list)):
+            union(codes_list[0], codes_list[i])
+
+    # 為每個族群選擇最佳名稱（最多成員共用的子產業）
+    groups = defaultdict(set)
+    for r in real_stocks:
+        leader = find(r["code"])
+        groups[leader].add(r["code"])
+
+    # 命名策略：找出此群組所有成員共用次數最多的子產業
+    group_names = {}
+    for leader, members in groups.items():
+        if len(members) < 2:
+            continue  # 單獨股票不需要特殊命名
+        # 統計此群組成員的所有子產業出現次數
+        sub_freq = Counter()
+        for r in real_stocks:
+            if r["code"] in members:
+                for sub in r["all_subs"]:
+                    sub_freq[sub] += 1
+        # 取覆蓋率最高的子產業作為群組名（排除過於寬泛的詞）
+        too_broad = {"電子零件元件", "其他"}
+        best_name = None
+        for sub, cnt in sub_freq.most_common():
+            if sub not in too_broad and cnt >= 2:
+                best_name = sub
+                break
+        if best_name:
+            group_names[leader] = best_name
+
+    # 分群
     by_industry = defaultdict(list)
     for r in records:
         if r["industry"] == "衍生商品":
             by_industry["衍生商品"].append(r)
         else:
-            r["cluster"] = r["industry"]
-            # 找出同族群的相關子產業（有其他處置股共享的）
+            leader = find(r["code"])
+            if leader in group_names:
+                cluster_name = group_names[leader]
+            else:
+                cluster_name = r["industry"]
+            r["cluster"] = cluster_name
+            # 找出同族群的相關子產業
             related = set()
             for sub in r.get("all_subs", []):
                 peers = sub_to_stocks.get(sub, set())
                 if len(peers) >= 2:
                     related.add(sub)
             r["related_subs"] = sorted(related)
-            by_industry[r["industry"]].append(r)
+            by_industry[cluster_name].append(r)
 
     # 即將出關：end_date 在 exit_days 天內
     exit_cutoff = today + timedelta(days=exit_days)
@@ -630,7 +768,7 @@ function switchTab(tabName) {{
 <div class="cluster-card">
 <table>
 """ + colgroup_singles + """
-  <thead><tr><th>代號</th><th>名稱</th><th>產業</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
+  <thead><tr><th>代號</th><th>名稱</th><th>產業</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
   <tbody>{singles_rows}</tbody>
 </table>
 </div>
@@ -683,7 +821,7 @@ def generate_html_report(records, analysis, exit_days):
             pc = s.get("precollect", "")
             mg = s.get("margin", "")
             pc_cls = ' class="tag-soon"' if pc == "全面預收" else ""
-            rows += f'<tr><td class="code">{s["code"]}</td><td>{s["name"]}</td><td class="pos wrap" title="{pos}">{pos}</td><td>{s["measure"]}{multi_reason}</td><td>{mi}</td><td><span{pc_cls}>{pc}</span></td><td>{mg}</td><td class="wrap">{s["reason"]}</td><td>{s["period_str"]}</td><td class="status">{status_html}</td></tr>\n'
+            rows += f'<tr><td class="code">{s["code"]}</td><td>{s["name"]}</td><td class="pos wrap" title="{pos}">{pos}</td><td>{s["measure"]}{multi_reason}</td><td>{mi}</td><td><span{pc_cls}>{pc}</span></td><td>{mg}</td><td class="wrap">{s.get("attention_detail","") or s["reason"]}</td><td>{s["period_str"]}</td><td class="status">{status_html}</td></tr>\n'
         # 收集此族群的相關子產業
         all_related = set()
         for s in stocks:
@@ -698,7 +836,7 @@ def generate_html_report(records, analysis, exit_days):
   <h3><span class="badge" style="background:{badge_color}">處置 {count}</span> {ind}{total_str}</h3>{related_tags}
   <table>
     <colgroup><col style="width:60px"><col style="width:72px"><col style="width:130px"><col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px"><col style="width:140px"><col style="width:135px"><col style="width:105px"></colgroup>
-    <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>原因</th><th>處置期間</th><th>狀態</th></tr></thead>
+    <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
     <tbody>{rows}</tbody>
   </table>
 </div>'''
@@ -729,7 +867,7 @@ def generate_html_report(records, analysis, exit_days):
         pc = s.get("precollect", "")
         mg = s.get("margin", "")
         pc_cls = ' class="tag-soon"' if pc == "全面預收" else ""
-        singles_rows += f'<tr><td class="code">{s["code"]}</td><td>{s["name"]}</td><td>{ind}</td><td class="pos wrap" title="{pos}">{pos}</td><td>{s["measure"]}</td><td>{mi}</td><td><span{pc_cls}>{pc}</span></td><td>{mg}</td><td class="wrap">{s["reason"]}</td><td>{s["period_str"]}</td><td class="status">{status_html}</td></tr>\n'
+        singles_rows += f'<tr><td class="code">{s["code"]}</td><td>{s["name"]}</td><td>{ind}</td><td class="pos wrap" title="{pos}">{pos}</td><td>{s["measure"]}</td><td>{mi}</td><td><span{pc_cls}>{pc}</span></td><td>{mg}</td><td class="wrap">{s.get("attention_detail","") or s["reason"]}</td><td>{s["period_str"]}</td><td class="status">{status_html}</td></tr>\n'
 
     # 出關時間軸（顯示出關日 = 處置結束日+1天）
     timeline_rows = ""
