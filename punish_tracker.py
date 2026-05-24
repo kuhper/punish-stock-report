@@ -1165,6 +1165,10 @@ def main():
     deduped = deduplicate(all_records)
     print(f"去重後: {len(deduped)} 檔處置股")
 
+    # 查詢每檔股票的注意交易資訊詳情（觸發原因）
+    print("  查詢注意交易資訊觸發條件...")
+    fetch_attention_details(deduped)
+
     # 分析
     analysis = analyze_clusters(deduped, ind_map, exit_days=args.days)
 
