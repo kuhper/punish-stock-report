@@ -1239,4 +1239,29 @@ def main():
     # 存 CSV 歷史
     csv_path = DATA_DIR / "punish_history.csv"
     fieldnames = ["query_date", "code", "name", "market", "industry", "measure",
-                  "condition", "reason", "start
+                  "condition", "reason", "start", "end", "period_str"]
+    file_exists = csv_path.exists()
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    with open(csv_path, "a", newline="", encoding="utf-8-sig") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        if not file_exists:
+            writer.writeheader()
+        for r in deduped:
+            writer.writerow({
+                "query_date": today_str,
+                "code": r["code"],
+                "name": r["name"],
+                "market": r["market"],
+                "industry": r.get("industry", ""),
+                "measure": r["measure"],
+                "condition": r["condition"],
+                "reason": r["reason"],
+                "start": r["start"].strftime("%Y-%m-%d") if r["start"] else "",
+                "end": r["end"].strftime("%Y-%m-%d") if r["end"] else "",
+                "period_str": r["period_str"],
+            })
+    print(f"\u6b77\u53f2\u7d00\u9304: {csv_path}")
+
+
+if __name__ == "__main__":
+    main()
