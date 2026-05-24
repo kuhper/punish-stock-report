@@ -469,11 +469,29 @@ def analyze_clusters(records, industry_map, exit_days=7):
     # 智慧族群合併：用 all_subs 交集找出真正同族群的股票
     real_stocks = [r for r in records if r["industry"] != "衍生商品"]
 
-    # 建立 子產業 -> 處置股 映射
+    # 計算每個子產業在全市場橫跨幾個主產業（用來排除過於寬泛的標籤）
+    sub_industry_breadth = defaultdict(set)  # sub -> set of main industries
+    for code, info in industry_map.items():
+        main_ind = info.get("industry", "")
+        all_subs_str = info.get("all_subs", "")
+        if all_subs_str and main_ind:
+            for sub in all_subs_str.split(","):
+                sub = sub.strip()
+                if sub:
+                    sub_industry_breadth[sub].add(main_ind)
+    # 橫跨 8+ 個主產業的子產業太寬泛，不適合做族群合併依據
+    MAX_INDUSTRY_SPAN = 8
+    too_broad_subs = {sub for sub, industries in sub_industry_breadth.items()
+                      if len(industries) >= MAX_INDUSTRY_SPAN}
+    too_broad_subs.update({"電子零件元件", "其他"})  # 額外硬排除
+    print(f"  排除過寬子產業 ({len(too_broad_subs)} 個，橫跨≥{MAX_INDUSTRY_SPAN}主產業)")
+
+    # 建立 子產業 -> 處置股 映射（排除過寬子產業）
     sub_to_stocks = defaultdict(set)
     for r in real_stocks:
         for sub in r["all_subs"]:
-            sub_to_stocks[sub].add(r["code"])
+            if sub not in too_broad_subs:
+                sub_to_stocks[sub].add(r["code"])
 
     # 找出有 >=2 檔處置股共用的子產業（有意義的聚集）
     shared_subs = {sub: codes for sub, codes in sub_to_stocks.items() if len(codes) >= 2}
@@ -513,10 +531,9 @@ def analyze_clusters(records, industry_map, exit_days=7):
                 for sub in r["all_subs"]:
                     sub_freq[sub] += 1
         # 取覆蓋率最高的子產業作為群組名（排除過於寬泛的詞）
-        too_broad = {"電子零件元件", "其他"}
         best_name = None
         for sub, cnt in sub_freq.most_common():
-            if sub not in too_broad and cnt >= 2:
+            if sub not in too_broad_subs and cnt >= 2:
                 best_name = sub
                 break
         if best_name:
@@ -882,29 +899,45 @@ def generate_html_report(records, analysis, exit_days):
         names = ", ".join(f'{s["code"]} {s["name"]}({s["industry"]})' for s in stocks)
         count = len(stocks)
         highlight = ' class="highlight"' if count >= 2 else ""
-        countdown = f"剩 {days_left} 天" if days_left > 0 else "明日出關" if days_left == 0 else "已出關"
+        countdown = f"剩 {days_left} 天" if days_left > 1 else "明日恢復" if days_left == 1 else "今日恢復" if days_left == 0 else "已出關"
         timeline_rows += f'<tr{highlight}><td>{date_str}</td><td>{countdown}</td><td><strong>{count}</strong> 檔</td><td>{names}</td></tr>\n'
 
-    # 明日出關卡片
+    # 明日出關預告（兩類）
     tomorrow = today + timedelta(days=1)
-    tomorrow_stocks = []
+    # 類型1: end == today → 今天是最後處置日，明日恢復正常交易
+    tomorrow_exit_stocks = []
+    # 類型2: end == tomorrow → 明天是最後處置日（仍受處置限制）
+    next_exit_stocks = []
     for s in analysis["still_in"]:
         if s["end"]:
-            exit_date = s["end"] + timedelta(days=1)
-            if exit_date.date() == tomorrow.date():
-                tomorrow_stocks.append(s)
-    if tomorrow_stocks:
+            if s["end"].date() == today.date():
+                tomorrow_exit_stocks.append(s)
+            elif s["end"].date() == tomorrow.date():
+                next_exit_stocks.append(s)
+
+    tomorrow_exit_html = ""
+    if tomorrow_exit_stocks:
         te_items = ""
-        for s in sorted(tomorrow_stocks, key=lambda x: x.get("industry", "")):
+        for s in sorted(tomorrow_exit_stocks, key=lambda x: x.get("industry", "")):
             te_items += f'<li><span class="te-code">{s["code"]}</span>{s["name"]} <span class="te-ind">{s.get("industry","")}</span></li>\n'
-        tomorrow_exit_html = f'''<div class="tomorrow-exit">
-  <div class="te-title">&#x1F514; 明日出關 ({tomorrow.strftime("%m/%d")}) \u2014 {len(tomorrow_stocks)} 檔</div>
+        tomorrow_exit_html += f'''<div class="tomorrow-exit">
+  <div class="te-title">\U0001F514 明日恢復正常交易 ({tomorrow.strftime("%m/%d")}) \u2014 {len(tomorrow_exit_stocks)} 檔</div>
   <ul class="te-list">{te_items}</ul>
-</div>'''
-    else:
+</div>\n'''
+
+    if next_exit_stocks:
+        ne_items = ""
+        for s in sorted(next_exit_stocks, key=lambda x: x.get("industry", "")):
+            ne_items += f'<li><span class="te-code">{s["code"]}</span>{s["name"]} <span class="te-ind">{s.get("industry","")}</span></li>\n'
+        tomorrow_exit_html += f'''<div class="tomorrow-exit" style="border-color:#f59e0b;">
+  <div class="te-title" style="color:#d97706;">\u26A0\uFE0F 明日最後處置日 ({tomorrow.strftime("%m/%d")}) \u2014 {len(next_exit_stocks)} 檔</div>
+  <ul class="te-list">{ne_items}</ul>
+</div>\n'''
+
+    if not tomorrow_exit_stocks and not next_exit_stocks:
         tomorrow_exit_html = f'''<div class="tomorrow-exit empty">
-  <div class="te-title" style="color:#475569;">明日出關 ({tomorrow.strftime("%m/%d")})</div>
-  <span class="te-none">明日無出關個股</span>
+  <div class="te-title" style="color:#475569;">出關預告 ({tomorrow.strftime("%m/%d")})</div>
+  <span class="te-none">明日無出關相關個股</span>
 </div>'''
 
     # 統計
@@ -1206,30 +1239,4 @@ def main():
     # 存 CSV 歷史
     csv_path = DATA_DIR / "punish_history.csv"
     fieldnames = ["query_date", "code", "name", "market", "industry", "measure",
-                  "condition", "reason", "start", "end", "period_str"]
-    file_exists = csv_path.exists()
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    with open(csv_path, "a", newline="", encoding="utf-8-sig") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        if not file_exists:
-            writer.writeheader()
-        for r in deduped:
-            writer.writerow({
-                "query_date": today_str,
-                "code": r["code"],
-                "name": r["name"],
-                "market": r["market"],
-                "industry": r.get("industry", ""),
-                "measure": r["measure"],
-                "condition": r["condition"],
-                "reason": r["reason"],
-                "start": r["start"].strftime("%Y-%m-%d") if r["start"] else "",
-                "end": r["end"].strftime("%Y-%m-%d") if r["end"] else "",
-                "period_str": r["period_str"],
-            })
-    print(f"歷史紀錄: {csv_path}")
-
-
-if __name__ == "__main__":
-    main()
-
+                  "condition", "reason", "start
