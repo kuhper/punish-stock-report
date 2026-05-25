@@ -40,22 +40,28 @@
   .tomorrow-enter .te-none { color:#475569; font-size:0.9em; }
   .tomorrow-enter.empty { border-color:#334155; border-left-color:#475569; }
 
-  /* Prediction Card */
-  .predict-card { background:#1e293b; border:1px solid #c084fc; border-left:4px solid #a855f7; border-radius:10px; padding:1em 1.3em; min-width:240px; max-width:520px; }
-  .predict-card .te-title { font-weight:700; color:#c084fc; font-size:1.05em; margin-bottom:0.5em; }
-  .predict-card .pred-list { list-style:none; }
-  .predict-card .pred-list li { padding:6px 0; font-size:0.88em; color:#e2e8f0; border-bottom:1px solid #334155; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px; }
-  .predict-card .pred-list li:last-child { border-bottom:none; }
-  .predict-card .pred-code { font-weight:700; color:#fbbf24; min-width:48px; }
-  .predict-card .pred-name { margin-right:6px; }
-  .predict-card .pred-ind { color:#94a3b8; font-size:0.8em; }
-  .predict-card .pred-scenario { display:block; width:100%; margin-top:3px; padding:4px 8px; border-radius:6px; font-size:0.85em; }
-  .pred-extreme { background:rgba(239,68,68,0.15); color:#fca5a5; border:1px solid rgba(239,68,68,0.3); }
-  .pred-high { background:rgba(251,146,60,0.15); color:#fdba74; border:1px solid rgba(251,146,60,0.3); }
-  .pred-medium { background:rgba(250,204,21,0.12); color:#fde047; border:1px solid rgba(250,204,21,0.25); }
-  .pred-low { background:rgba(96,165,250,0.1); color:#93c5fd; border:1px solid rgba(96,165,250,0.2); }
-  .predict-card .pred-threshold { font-weight:600; }
-  .predict-card .pred-buffer { font-size:0.8em; color:#94a3b8; }
+  /* Prediction Cards */
+  .pred-wrap { margin-bottom:0.5em; }
+  .pred-cards { display:flex; gap:1em; flex-wrap:wrap; }
+  .predict-card { background:#1e293b; border:1px solid #334155; border-radius:10px; padding:1em 1.3em; min-width:240px; max-width:420px; flex:1; }
+  .predict-5min { border-color:#f87171; border-left:4px solid #ef4444; }
+  .predict-5min .te-title { color:#f87171; }
+  .predict-20min { border-color:#fb923c; border-left:4px solid #f97316; }
+  .predict-20min .te-title { color:#fb923c; }
+  .predict-card .te-title { font-weight:700; font-size:1.05em; margin-bottom:0.7em; display:flex; align-items:center; gap:0.5em; }
+  .pred-badge { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; font-size:0.8em; font-weight:700; color:#fff; }
+  .pred-badge-5 { background:#ef4444; }
+  .pred-badge-20 { background:#f97316; }
+  .pred-item { padding:8px 0; border-bottom:1px solid #334155; }
+  .pred-item:last-child { border-bottom:none; }
+  .pred-stock { margin-bottom:3px; }
+  .pred-code { font-weight:700; color:#fbbf24; font-size:1em; }
+  .pred-name { color:#e2e8f0; font-weight:600; }
+  .pred-cond { font-size:0.88em; padding:2px 0; }
+  .pred-certain { color:#fca5a5; font-weight:700; }
+  .pred-high { color:#fdba74; }
+  .pred-medium { color:#fde047; }
+  .pred-low { color:#93c5fd; }
   .predict-card .te-none { color:#475569; font-size:0.9em; }
   .predict-card.empty { border-color:#334155; border-left-color:#475569; }
 
@@ -178,19 +184,36 @@ function switchTab(tabName) {
 <li><span class="te-code">3026</span>禾伸堂 <span class="te-ind">電子元件代理商</span> <span class="te-measure">第二次處置</span></li>
 </ul>
 </div>
-    <div class="predict-card">
-  <div class="te-title">🔮 後天處置預測 (05/27) — 1 檔高風險</div>
-  <div style="color:#94a3b8;font-size:0.78em;margin-bottom:6px;">第1款門檻：6日累積漲跌幅&gt;32%且差幅&gt;20%（差幅條件需視大盤而定）</div>
-  <ul class="pred-list"><li>
-  <span class="pred-code">2455</span>
-  <span class="pred-name">全新</span>
-  <span class="pred-scenario pred-low">
-    【低風險】已連續 4 天第1-8款注意｜今收 444.00
-    <br>6日漲幅 14.7% — 門檻 510.84元 (基準05/18收387.00) — 明日需再漲 15.1% 觸發
-    <br>→ 觸發後05/27進入處置
-  </span>
-</li>
-</ul>
+    <div class="pred-wrap">
+  <div style="color:#94a3b8;font-size:0.78em;margin-bottom:6px;">處置預測 (05/27) — 共 6 檔｜門檻：6日漲跌幅&gt;32%</div>
+  <div class="pred-cards"><div class="predict-card predict-5min">
+  <div class="te-title"><span class="pred-badge pred-badge-5">5</span> 5分鐘處置預測</div>
+  <div class="pred-item">
+  <div class="pred-stock"><span class="pred-code">2455</span> <span class="pred-name">全新</span></div>
+  <div class="pred-cond pred-low">收盤≥510.8(+15.05%)</div>
+</div>
+<div class="pred-item">
+  <div class="pred-stock"><span class="pred-code">3221</span> <span class="pred-name">台嘉碩</span></div>
+  <div class="pred-cond pred-low">收盤≥40.9(-32.00%)</div>
+</div>
+<div class="pred-item">
+  <div class="pred-stock"><span class="pred-code">3537</span> <span class="pred-name">堡達</span></div>
+  <div class="pred-cond pred-low">收盤≥52.2(-32.00%)</div>
+</div>
+<div class="pred-item">
+  <div class="pred-stock"><span class="pred-code">4127</span> <span class="pred-name">天良</span></div>
+  <div class="pred-cond pred-low">收盤≥47.0(-32.00%)</div>
+</div>
+<div class="pred-item">
+  <div class="pred-stock"><span class="pred-code">4542</span> <span class="pred-name">科嶠</span></div>
+  <div class="pred-cond pred-low">收盤≥180.2(-32.00%)</div>
+</div>
+<div class="pred-item">
+  <div class="pred-stock"><span class="pred-code">8040</span> <span class="pred-name">九暘</span></div>
+  <div class="pred-cond pred-low">收盤≥83.3(-32.00%)</div>
+</div>
+
+</div></div>
 </div>
   </div>
 </div>
