@@ -865,7 +865,7 @@ def fetch_disposal_prediction(in_disposal_codes, industry_map, recent_disposal_c
         try:
             url2 = "https://www.tpex.org.tw/www/zh-tw/afterTrading/dailyQuotes"
             if method == "post":
-                r2 = requests.post(url2, json={"date": ref_date_roc, "response": "json"},
+                r2 = requests.post(url2, data={"date": ref_date_roc, "response": "json"},
                                    headers=HEADERS, timeout=15)
             else:
                 r2 = requests.get(f"{url2}?date={ref_date_roc}&response=json",
