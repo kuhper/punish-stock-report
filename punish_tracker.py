@@ -652,7 +652,7 @@ def _get_biz_days_back(from_date, n):
     return d
 
 
-def fetch_disposal_prediction(in_disposal_codes, industry_map):
+def fetch_disposal_prediction(in_disposal_codes, industry_map, recent_disposal_codes=None):
     """
     預測後天可能進入處置的股票。
 
@@ -660,7 +660,11 @@ def fetch_disposal_prediction(in_disposal_codes, industry_map):
     - 路徑A：連續3天第1款注意 → 處置（找已連續2天的）
     - 路徑B：連續5天第1-8款注意 → 處置（找已連續4天的）
     - 計算明日收盤需達多少價位才會再觸發第1款（6日累積漲跌幅>32%門檻）
+    - 按首犯/再犯分類撮合時間（5分鐘 vs 20分鐘）
+    - 判定「一定處置」：即使漲跌停仍超門檻
     """
+    if recent_disposal_codes is None:
+        recent_disposal_codes = set()
     import time
     today = datetime.now()
     tomorrow = today + timedelta(days=1)
@@ -852,20 +856,33 @@ def fetch_disposal_prediction(in_disposal_codes, industry_map):
     except Exception as e:
         print(f"  TWSE 參考價抓取失敗: {e}")
 
-    # TPEx bulk prices
-    try:
-        url2 = (f"https://www.tpex.org.tw/www/zh-tw/afterTrading/dailyQuotes?"
-                f"date={ref_date.year-1911}/{ref_date.strftime('%m/%d')}&response=json")
-        r2 = requests.get(url2, headers=HEADERS, timeout=15)
-        for t in r2.json().get("tables", []):
-            for row in t.get("data", []):
-                code = str(row[0]).strip()
-                try:
-                    ref_prices[code] = float(str(row[2]).strip().replace(",",""))
-                except Exception:
-                    pass
-    except Exception as e:
-        print(f"  TPEx 參考價抓取失敗: {e}")
+    # TPEx bulk prices (try POST then GET)
+    tpex_ref_loaded = False
+    ref_date_roc = f"{ref_date.year-1911}/{ref_date.strftime('%m/%d')}"
+    for method in ["post", "get"]:
+        if tpex_ref_loaded:
+            break
+        try:
+            url2 = "https://www.tpex.org.tw/www/zh-tw/afterTrading/dailyQuotes"
+            if method == "post":
+                r2 = requests.post(url2, json={"date": ref_date_roc, "response": "json"},
+                                   headers=HEADERS, timeout=15)
+            else:
+                r2 = requests.get(f"{url2}?date={ref_date_roc}&response=json",
+                                  headers=HEADERS, timeout=15)
+            td = r2.json()
+            for t in td.get("tables", []):
+                for row in t.get("data", []):
+                    code = str(row[0]).strip()
+                    try:
+                        ref_prices[code] = float(str(row[2]).strip().replace(",",""))
+                        tpex_ref_loaded = True
+                    except Exception:
+                        pass
+        except Exception as e:
+            print(f"  TPEx 參考價({method})失敗: {e}")
+    if tpex_ref_loaded:
+        print(f"  TPEx 參考價載入成功")
 
     # 6. Calculate thresholds
     predictions = []
@@ -896,8 +913,19 @@ def fetch_disposal_prediction(in_disposal_codes, industry_map):
             need_pct = (latest_p - threshold) / latest_p * 100 if latest_p > threshold else 0
             already_above = latest_p <= threshold
 
+        # 「一定處置」判定：即使漲跌停（±10%）仍超門檻
+        if direction == "up":
+            certain = (latest_p * 0.9 >= threshold)  # 跌停仍超門檻
+        else:
+            certain = (latest_p * 1.1 <= threshold)  # 漲停仍低於門檻
+
+        # 收盤距門檻百分比（相對今收）
+        pct_from_close = (threshold - latest_p) / latest_p * 100
+
         # Risk level
-        if already_above and buffer_pct > 10:
+        if certain:
+            risk = "certain"
+        elif already_above and buffer_pct > 10:
             risk = "extreme"
         elif already_above:
             risk = "high"
@@ -905,6 +933,9 @@ def fetch_disposal_prediction(in_disposal_codes, industry_map):
             risk = "medium"
         else:
             risk = "low"
+
+        # 撮合時間：再犯（近期曾處置）→ 20分鐘，首犯 → 5分鐘
+        disposal_minutes = 20 if code in recent_disposal_codes else 5
 
         industry = industry_map.get(code, {}).get("industry", "")
 
@@ -926,6 +957,9 @@ def fetch_disposal_prediction(in_disposal_codes, industry_map):
             "buffer_pct": buffer_pct,
             "need_pct": need_pct,
             "already_above": already_above,
+            "certain": certain,
+            "pct_from_close": pct_from_close,
+            "disposal_minutes": disposal_minutes,
             "risk": risk,
             "tomorrow": tomorrow.strftime("%m/%d"),
             "prediction_date": prediction_date.strftime("%m/%d"),
@@ -992,22 +1026,28 @@ def _build_html_template():
   .tomorrow-enter .te-none {{ color:#475569; font-size:0.9em; }}
   .tomorrow-enter.empty {{ border-color:#334155; border-left-color:#475569; }}
 
-  /* Prediction Card */
-  .predict-card {{ background:#1e293b; border:1px solid #c084fc; border-left:4px solid #a855f7; border-radius:10px; padding:1em 1.3em; min-width:240px; max-width:520px; }}
-  .predict-card .te-title {{ font-weight:700; color:#c084fc; font-size:1.05em; margin-bottom:0.5em; }}
-  .predict-card .pred-list {{ list-style:none; }}
-  .predict-card .pred-list li {{ padding:6px 0; font-size:0.88em; color:#e2e8f0; border-bottom:1px solid #334155; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px; }}
-  .predict-card .pred-list li:last-child {{ border-bottom:none; }}
-  .predict-card .pred-code {{ font-weight:700; color:#fbbf24; min-width:48px; }}
-  .predict-card .pred-name {{ margin-right:6px; }}
-  .predict-card .pred-ind {{ color:#94a3b8; font-size:0.8em; }}
-  .predict-card .pred-scenario {{ display:block; width:100%; margin-top:3px; padding:4px 8px; border-radius:6px; font-size:0.85em; }}
-  .pred-extreme {{ background:rgba(239,68,68,0.15); color:#fca5a5; border:1px solid rgba(239,68,68,0.3); }}
-  .pred-high {{ background:rgba(251,146,60,0.15); color:#fdba74; border:1px solid rgba(251,146,60,0.3); }}
-  .pred-medium {{ background:rgba(250,204,21,0.12); color:#fde047; border:1px solid rgba(250,204,21,0.25); }}
-  .pred-low {{ background:rgba(96,165,250,0.1); color:#93c5fd; border:1px solid rgba(96,165,250,0.2); }}
-  .predict-card .pred-threshold {{ font-weight:600; }}
-  .predict-card .pred-buffer {{ font-size:0.8em; color:#94a3b8; }}
+  /* Prediction Cards */
+  .pred-wrap {{ margin-bottom:0.5em; }}
+  .pred-cards {{ display:flex; gap:1em; flex-wrap:wrap; }}
+  .predict-card {{ background:#1e293b; border:1px solid #334155; border-radius:10px; padding:1em 1.3em; min-width:240px; max-width:420px; flex:1; }}
+  .predict-5min {{ border-color:#f87171; border-left:4px solid #ef4444; }}
+  .predict-5min .te-title {{ color:#f87171; }}
+  .predict-20min {{ border-color:#fb923c; border-left:4px solid #f97316; }}
+  .predict-20min .te-title {{ color:#fb923c; }}
+  .predict-card .te-title {{ font-weight:700; font-size:1.05em; margin-bottom:0.7em; display:flex; align-items:center; gap:0.5em; }}
+  .pred-badge {{ display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; font-size:0.8em; font-weight:700; color:#fff; }}
+  .pred-badge-5 {{ background:#ef4444; }}
+  .pred-badge-20 {{ background:#f97316; }}
+  .pred-item {{ padding:8px 0; border-bottom:1px solid #334155; }}
+  .pred-item:last-child {{ border-bottom:none; }}
+  .pred-stock {{ margin-bottom:3px; }}
+  .pred-code {{ font-weight:700; color:#fbbf24; font-size:1em; }}
+  .pred-name {{ color:#e2e8f0; font-weight:600; }}
+  .pred-cond {{ font-size:0.88em; padding:2px 0; }}
+  .pred-certain {{ color:#fca5a5; font-weight:700; }}
+  .pred-high {{ color:#fdba74; }}
+  .pred-medium {{ color:#fde047; }}
+  .pred-low {{ color:#93c5fd; }}
   .predict-card .te-none {{ color:#475569; font-size:0.9em; }}
   .predict-card.empty {{ border-color:#334155; border-left-color:#475569; }}
 
@@ -1305,62 +1345,61 @@ def generate_html_report(records, analysis, exit_days):
     in_disposal_codes = set(s["code"] for s in analysis["still_in"])
     # Also exclude stocks entering disposal tomorrow
     in_disposal_codes.update(r["code"] for r in records if r["start"] and r["start"].date() == tomorrow.date())
+    # 近期曾處置的股票（用於判定再犯 → 20分鐘撮合）
+    recent_disposal_codes = set(r["code"] for r in records)
     ind_map_for_pred = {}
     for r in records:
         if r.get("industry"):
             ind_map_for_pred[r["code"]] = {"industry": r["industry"]}
 
     try:
-        predictions = fetch_disposal_prediction(in_disposal_codes, ind_map_for_pred)
+        predictions = fetch_disposal_prediction(in_disposal_codes, ind_map_for_pred, recent_disposal_codes)
     except Exception as e:
         print(f"  後天處置預測失敗: {e}")
         predictions = []
 
     prediction_html = ""
     if predictions:
-        pred_items = ""
-        risk_labels = {"extreme": "極高", "high": "高", "medium": "中", "low": "低"}
-        risk_css = {"extreme": "pred-extreme", "high": "pred-high", "medium": "pred-medium", "low": "pred-low"}
-        for p in predictions:
-            ind_tag = f' <span class="pred-ind">{p["industry"]}</span>' if p["industry"] else ""
-            risk_label = risk_labels.get(p["risk"], "")
-            css_cls = risk_css.get(p["risk"], "pred-low")
+        pred_date = predictions[0]["prediction_date"]
+        # 按撮合時間分組
+        pred_5 = [p for p in predictions if p["disposal_minutes"] == 5]
+        pred_20 = [p for p in predictions if p["disposal_minutes"] == 20]
 
-            if p["risk_path"] == "A":
-                path_desc = f'已連續 {p["consec_1"]} 天第1款注意'
-            else:
-                path_desc = f'已連續 {p["consec_18"]} 天第1-8款注意'
-
-            if p["already_above"]:
-                if p["direction"] == "up":
-                    scenario = (f'6日漲幅已達 {p["change_6d"]:.1f}% — 門檻 {p["threshold"]:.2f}元 '
-                                f'(基準{p["ref_date"]}收{p["ref_price"]:.2f}) — '
-                                f'明日可跌 {p["buffer_pct"]:.1f}% 仍觸發')
+        def _build_pred_items(plist):
+            items = ""
+            for p in plist:
+                if p["certain"]:
+                    condition = "一定處置"
+                    cond_cls = "pred-certain"
                 else:
-                    scenario = (f'6日跌幅已達 {abs(p["change_6d"]):.1f}% — 門檻 {p["threshold"]:.2f}元 '
-                                f'— 明日可漲 {p["buffer_pct"]:.1f}% 仍觸發')
-            else:
-                if p["direction"] == "up":
-                    scenario = (f'6日漲幅 {p["change_6d"]:.1f}% — 門檻 {p["threshold"]:.2f}元 '
-                                f'(基準{p["ref_date"]}收{p["ref_price"]:.2f}) — '
-                                f'明日需再漲 {p["need_pct"]:.1f}% 觸發')
-                else:
-                    scenario = (f'6日跌幅 {abs(p["change_6d"]):.1f}% — 門檻 {p["threshold"]:.2f}元 '
-                                f'— 明日需再跌 {p["need_pct"]:.1f}% 觸發')
+                    sign = "+" if p["pct_from_close"] > 0 else ""
+                    condition = f'收盤≥{p["threshold"]:.1f}({sign}{p["pct_from_close"]:.2f}%)'
+                    if p["already_above"]:
+                        cond_cls = "pred-high"
+                    elif abs(p["pct_from_close"]) < 3:
+                        cond_cls = "pred-medium"
+                    else:
+                        cond_cls = "pred-low"
+                items += f'''<div class="pred-item">
+  <div class="pred-stock"><span class="pred-code">{p["code"]}</span> <span class="pred-name">{p["name"]}</span></div>
+  <div class="pred-cond {cond_cls}">{condition}</div>
+</div>\n'''
+            return items
 
-            pred_items += f'''<li>
-  <span class="pred-code">{p["code"]}</span>
-  <span class="pred-name">{p["name"]}</span>{ind_tag}
-  <span class="pred-scenario {css_cls}">
-    【{risk_label}風險】{path_desc}｜今收 {p["latest_price"]:.2f}
-    <br>{scenario}
-    <br>→ 觸發後{p["prediction_date"]}進入處置
-  </span>
-</li>\n'''
-        prediction_html = f'''<div class="predict-card">
-  <div class="te-title">\U0001F52E 後天處置預測 ({predictions[0]["prediction_date"]}) — {len(predictions)} 檔高風險</div>
-  <div style="color:#94a3b8;font-size:0.78em;margin-bottom:6px;">第1款門檻：6日累積漲跌幅&gt;32%且差幅&gt;20%（差幅條件需視大盤而定）</div>
-  <ul class="pred-list">{pred_items}</ul>
+        cards = ""
+        if pred_5:
+            cards += f'''<div class="predict-card predict-5min">
+  <div class="te-title"><span class="pred-badge pred-badge-5">5</span> 5分鐘處置預測</div>
+  {_build_pred_items(pred_5)}
+</div>'''
+        if pred_20:
+            cards += f'''<div class="predict-card predict-20min">
+  <div class="te-title"><span class="pred-badge pred-badge-20">20</span> 20分鐘處置預測</div>
+  {_build_pred_items(pred_20)}
+</div>'''
+        prediction_html = f'''<div class="pred-wrap">
+  <div style="color:#94a3b8;font-size:0.78em;margin-bottom:6px;">處置預測 ({pred_date}) — 共 {len(predictions)} 檔｜門檻：6日漲跌幅&gt;32%</div>
+  <div class="pred-cards">{cards}</div>
 </div>'''
     else:
         prediction_html = f'''<div class="predict-card empty">
