@@ -1037,6 +1037,14 @@ def _build_html_template():
 <style>
   * {{ box-sizing: border-box; margin:0; padding:0; }}
   body {{ font-family: -apple-system,'Microsoft JhengHei','Noto Sans TC','Segoe UI',sans-serif; background:#0f172a; color:#e2e8f0; font-size:15px; line-height:1.7; }}
+
+  /* Top Nav */
+  .top-nav {{position:sticky;top:0;z-index:100;display:flex;background:#1e293b;border-bottom:2px solid #334155;padding:0 1em;height:44px;align-items:stretch;}}
+  .top-nav .nav-brand {{padding:0 .8em;font-weight:700;color:#f1f5f9;font-size:.95em;border-right:1px solid #334155;margin-right:.3em;display:flex;align-items:center;text-decoration:none;}}
+  .top-nav a {{padding:0 1.1em;font-weight:500;color:#94a3b8;border-bottom:3px solid transparent;margin-bottom:-2px;font-size:.88em;display:flex;align-items:center;text-decoration:none;white-space:nowrap;transition:color .15s;}}
+  .top-nav a:hover {{color:#e2e8f0;}}
+  .top-nav a.active {{color:#60a5fa;border-bottom-color:#3b82f6;}}
+
   .container {{ max-width:1440px; margin:0 auto; padding:2em 2.5em; }}
 
   /* Header */
@@ -1181,6 +1189,14 @@ function switchTab(tabName) {{
 }}
 </script>
 </head><body>
+<nav class="top-nav">
+  <a class="nav-brand" href="index.html">股市監控</a>
+  <a class="active" href="index.html?p=punish">處置股追蹤</a>
+  <a href="index.html?p=etf">ETF 持股追蹤</a>
+  <a href="index.html?p=sector">族群熱度監控</a>
+  <a href="index.html?p=us">美股強勢股</a>
+  <a href="index.html?p=timeline">全球時序</a>
+</nav>
 <div class="container">
 
 <div class="header-wrap">
@@ -1341,42 +1357,27 @@ def generate_html_report(records, analysis, exit_days):
         countdown = f"剩 {days_left} 天" if days_left > 1 else "明日恢復" if days_left == 1 else "今日恢復" if days_left == 0 else "已出關"
         timeline_rows += f'<tr{highlight}><td>{date_str}</td><td>{countdown}</td><td><strong>{count}</strong> 檔</td><td>{names}</td></tr>\n'
 
-    # 明日出關預告（兩類）
+    # 明日出關預告
     tomorrow = today + timedelta(days=1)
-    # 類型1: end == today → 今天是最後處置日，明日恢復正常交易
     tomorrow_exit_stocks = []
-    # 類型2: end == tomorrow → 明天是最後處置日（仍受處置限制）
-    next_exit_stocks = []
     for s in analysis["still_in"]:
-        if s["end"]:
-            if s["end"].date() == today.date():
-                tomorrow_exit_stocks.append(s)
-            elif s["end"].date() == tomorrow.date():
-                next_exit_stocks.append(s)
+        if s["end"] and s["end"].date() == today.date():
+            tomorrow_exit_stocks.append(s)
 
     tomorrow_exit_html = ""
     if tomorrow_exit_stocks:
         te_items = ""
         for s in sorted(tomorrow_exit_stocks, key=lambda x: x.get("industry", "")):
             te_items += f'<li><span class="te-code">{s["code"]}</span>{s["name"]} <span class="te-ind">{s.get("industry","")}</span></li>\n'
-        tomorrow_exit_html += f'''<div class="tomorrow-exit">
+        tomorrow_exit_html = f'''<div class="tomorrow-exit">
   <div class="te-title">\U0001F514 明日恢復正常交易 ({tomorrow.strftime("%m/%d")}) \u2014 {len(tomorrow_exit_stocks)} 檔</div>
   <ul class="te-list">{te_items}</ul>
 </div>\n'''
 
-    if next_exit_stocks:
-        ne_items = ""
-        for s in sorted(next_exit_stocks, key=lambda x: x.get("industry", "")):
-            ne_items += f'<li><span class="te-code">{s["code"]}</span>{s["name"]} <span class="te-ind">{s.get("industry","")}</span></li>\n'
-        tomorrow_exit_html += f'''<div class="tomorrow-exit" style="border-color:#f59e0b;">
-  <div class="te-title" style="color:#d97706;">\u26A0\uFE0F 明日最後處置日 ({tomorrow.strftime("%m/%d")}) \u2014 {len(next_exit_stocks)} 檔</div>
-  <ul class="te-list">{ne_items}</ul>
-</div>\n'''
-
-    if not tomorrow_exit_stocks and not next_exit_stocks:
+    else:
         tomorrow_exit_html = f'''<div class="tomorrow-exit empty">
   <div class="te-title" style="color:#475569;">出關預告 ({tomorrow.strftime("%m/%d")})</div>
-  <span class="te-none">明日無出關相關個股</span>
+  <span class="te-none">明日無出關個股</span>
 </div>'''
 
     # 明日進入處置卡片
@@ -1860,3 +1861,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+                                                                                                                                                                                                                                    
