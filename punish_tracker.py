@@ -640,6 +640,7 @@ def print_console_report(records, analysis, exit_days):
 # ---- 後天處置預測 ----
 
 CLAUSE_1_8 = {"一","二","三","四","五","六","七","八"}
+CN_TO_NUM = {"一":"1","二":"2","三":"3","四":"4","五":"5","六":"6","七":"7","八":"8","九":"9","十":"10","十一":"11","十二":"12"}
 
 def _get_biz_days_back(from_date, n):
     """Get the date n business days before from_date"""
@@ -810,25 +811,53 @@ def fetch_disposal_prediction(in_disposal_codes, industry_map, recent_disposal_c
                 prev -= timedelta(days=1)
             check = prev
 
-        # Risk assessment:
-        # Path A: exactly 2 consecutive 第1款 → needs 1 more → disposal in 2 days
-        # Path B: exactly 4 consecutive 第1-8款 → needs 1 more
-        # Skip stocks that already triggered (3+ 第1款 or 5+ 第1-8款)
-        risk_path = None
-        if consec_1 == 2:
-            risk_path = "A"
-        elif consec_18 == 4 and consec_1 < 2:
-            risk_path = "B"
-        if not risk_path:
+        # Build clause timeline (oldest → newest, Arabic numerals)
+        clause_timeline = []
+        timeline_dates = []
+        ck = latest
+        for _ in range(consecutive):
+            timeline_dates.append(ck)
+            pv = ck - timedelta(days=1)
+            while pv.weekday() >= 5:
+                pv -= timedelta(days=1)
+            ck = pv
+        timeline_dates.reverse()
+        for d in timeline_dates:
+            clauses = sorted(day_clauses.get(d, set()))
+            nums = [CN_TO_NUM.get(c, c) for c in clauses]
+            clause_timeline.append(",".join(nums) if nums else "?")
+
+        # Distance to disposal for each path
+        # Path A: 3 consecutive 第1款 → disposal
+        path_a_dist = (3 - consec_1) if consec_1 >= 1 else None
+        # Path B: 5 consecutive 第1-8款 → disposal
+        path_b_dist = (5 - consec_18) if consec_18 >= 2 else None
+        # Already triggered → skip
+        if path_a_dist is not None and path_a_dist <= 0:
+            path_a_dist = None
+        if path_b_dist is not None and path_b_dist <= 0:
+            path_b_dist = None
+        dists = []
+        if path_a_dist and path_a_dist > 0:
+            dists.append(("A", path_a_dist))
+        if path_b_dist and path_b_dist > 0:
+            dists.append(("B", path_b_dist))
+        if not dists:
             continue
+        dists.sort(key=lambda x: x[1])
+        closest_path, closest_dist = dists[0]
+        tier = "imminent" if closest_dist == 1 else ("alert" if closest_dist == 2 else "watch")
 
         high_risk.append({
             "code": code, "name": name, "market": market,
             "consec_1": consec_1, "consec_18": consec_18,
-            "consecutive": consecutive, "risk_path": risk_path,
+            "consecutive": consecutive, "risk_path": closest_path,
             "latest_price": day_prices.get(latest),
             "day_clauses": dict(day_clauses),
             "day_prices": day_prices,
+            "clause_timeline": clause_timeline,
+            "closest_path": closest_path, "closest_dist": closest_dist,
+            "tier": tier,
         })
 
     if not high_risk:
@@ -884,91 +913,80 @@ def fetch_disposal_prediction(in_disposal_codes, industry_map, recent_disposal_c
     if tpex_ref_loaded:
         print(f"  TPEx 參考價載入成功")
 
-    # 6. Calculate thresholds
+    # 6. Calculate thresholds (imminent) + build predictions for all tiers
     predictions = []
     for s in high_risk:
         code = s["code"]
-        ref_p = ref_prices.get(code)
-        latest_p = s["latest_price"]
-        if not ref_p or not latest_p:
-            continue
-
-        # Direction: check if stock is rising or falling
-        direction = "up" if latest_p > ref_p else "down"
-        change_6d = (latest_p - ref_p) / ref_p * 100
-
-        # Threshold for 第1款 (32% cumulative change)
-        if direction == "up":
-            threshold = ref_p * 1.32
-        else:
-            threshold = ref_p * 0.68
-
-        # Buffer: how much can the price move against the trend and still trigger
-        if direction == "up":
-            buffer_pct = (latest_p - threshold) / latest_p * 100 if latest_p > threshold else 0
-            need_pct = (threshold - latest_p) / latest_p * 100 if latest_p < threshold else 0
-            already_above = latest_p >= threshold
-        else:
-            buffer_pct = (threshold - latest_p) / latest_p * 100 if latest_p < threshold else 0
-            need_pct = (latest_p - threshold) / latest_p * 100 if latest_p > threshold else 0
-            already_above = latest_p <= threshold
-
-        # 「一定處置」判定：即使漲跌停（±10%）仍超門檻
-        if direction == "up":
-            certain = (latest_p * 0.9 >= threshold)  # 跌停仍超門檻
-        else:
-            certain = (latest_p * 1.1 <= threshold)  # 漲停仍低於門檻
-
-        # 收盤距門檻百分比（相對今收）
-        pct_from_close = (threshold - latest_p) / latest_p * 100
-
-        # Risk level
-        if certain:
-            risk = "certain"
-        elif already_above and buffer_pct > 10:
-            risk = "extreme"
-        elif already_above:
-            risk = "high"
-        elif need_pct < 3:
-            risk = "medium"
-        else:
-            risk = "low"
-
-        # 撮合時間：再犯（近期曾處置）→ 20分鐘，首犯 → 5分鐘
+        tier = s["tier"]
         disposal_minutes = 20 if code in recent_disposal_codes else 5
-
         industry = industry_map.get(code, {}).get("industry", "")
-
-        predictions.append({
-            "code": code,
-            "name": s["name"],
+        base = {
+            "code": code, "name": s["name"],
             "market": "上市" if s["market"] == "twse" else "上櫃",
-            "industry": industry,
-            "risk_path": s["risk_path"],
-            "consec_1": s["consec_1"],
-            "consec_18": s["consec_18"],
+            "industry": industry, "risk_path": s["risk_path"],
+            "consec_1": s["consec_1"], "consec_18": s["consec_18"],
             "consecutive": s["consecutive"],
-            "latest_price": latest_p,
-            "ref_price": ref_p,
-            "ref_date": ref_date.strftime("%m/%d"),
-            "threshold": threshold,
-            "direction": direction,
-            "change_6d": change_6d,
-            "buffer_pct": buffer_pct,
-            "need_pct": need_pct,
-            "already_above": already_above,
-            "certain": certain,
-            "pct_from_close": pct_from_close,
-            "disposal_minutes": disposal_minutes,
-            "risk": risk,
+            "clause_timeline": s.get("clause_timeline", []),
+            "closest_path": s.get("closest_path", s["risk_path"]),
+            "closest_dist": s.get("closest_dist", 1),
+            "tier": tier, "disposal_minutes": disposal_minutes,
             "tomorrow": tomorrow.strftime("%m/%d"),
             "prediction_date": prediction_date.strftime("%m/%d"),
-        })
+        }
+        if tier == "imminent":
+            ref_p = ref_prices.get(code)
+            latest_p = s["latest_price"]
+            if not ref_p or not latest_p:
+                base.update({"latest_price": latest_p, "ref_price": ref_p,
+                    "threshold": None, "certain": False, "pct_from_close": None,
+                    "already_above": False, "risk": "unknown", "direction": None,
+                    "change_6d": 0})
+                predictions.append(base)
+                continue
+            direction = "up" if latest_p > ref_p else "down"
+            change_6d = (latest_p - ref_p) / ref_p * 100
+            threshold = ref_p * 1.32 if direction == "up" else ref_p * 0.68
+            if direction == "up":
+                buffer_pct = (latest_p - threshold) / latest_p * 100 if latest_p > threshold else 0
+                need_pct = (threshold - latest_p) / latest_p * 100 if latest_p < threshold else 0
+                already_above = latest_p >= threshold
+            else:
+                buffer_pct = (threshold - latest_p) / latest_p * 100 if latest_p < threshold else 0
+                need_pct = (latest_p - threshold) / latest_p * 100 if latest_p > threshold else 0
+                already_above = latest_p <= threshold
+            certain = (latest_p * 0.9 >= threshold) if direction == "up" else (latest_p * 1.1 <= threshold)
+            pct_from_close = (threshold - latest_p) / latest_p * 100
+            if certain: risk = "certain"
+            elif already_above and buffer_pct > 10: risk = "extreme"
+            elif already_above: risk = "high"
+            elif need_pct < 3: risk = "medium"
+            else: risk = "low"
+            base.update({
+                "latest_price": latest_p, "ref_price": ref_p,
+                "ref_date": ref_date.strftime("%m/%d"),
+                "threshold": threshold, "direction": direction,
+                "change_6d": change_6d, "buffer_pct": buffer_pct,
+                "need_pct": need_pct, "already_above": already_above,
+                "certain": certain, "pct_from_close": pct_from_close, "risk": risk,
+            })
+        else:
+            base.update({
+                "latest_price": s["latest_price"], "ref_price": None,
+                "threshold": None, "certain": False, "pct_from_close": None,
+                "already_above": False, "risk": tier, "direction": None, "change_6d": 0,
+            })
+        predictions.append(base)
 
-    # Sort: extreme/high risk first, then by buffer
-    risk_order = {"extreme": 0, "high": 1, "medium": 2, "low": 3}
-    predictions.sort(key=lambda x: (risk_order.get(x["risk"], 9), -x["change_6d"]))
-    print(f"  預測候選: {len(predictions)} 檔")
+    tier_order = {"imminent": 0, "alert": 1, "watch": 2}
+    risk_order = {"certain": 0, "extreme": 1, "high": 2, "medium": 3, "low": 4,
+                  "unknown": 5, "alert": 6, "watch": 7}
+    predictions.sort(key=lambda x: (tier_order.get(x["tier"], 9),
+                                     risk_order.get(x["risk"], 9),
+                                     -x.get("change_6d", 0)))
+    n_imm = len([p for p in predictions if p["tier"] == "imminent"])
+    n_alt = len([p for p in predictions if p["tier"] == "alert"])
+    n_wat = len([p for p in predictions if p["tier"] == "watch"])
+    print(f"  預測候選: {len(predictions)} 檔 (即將:{n_imm} 警戒:{n_alt} 觀察:{n_wat})")
     return predictions
 
 
@@ -1050,6 +1068,20 @@ def _build_html_template():
   .pred-low {{ color:#93c5fd; }}
   .predict-card .te-none {{ color:#475569; font-size:0.9em; }}
   .predict-card.empty {{ border-color:#334155; border-left-color:#475569; }}
+  /* Prediction tiers */
+  .pred-tier {{ margin-bottom:0.8em; }}
+  .pred-tier-header {{ font-size:0.92em; font-weight:700; padding:4px 0; display:flex; align-items:center; gap:6px; }}
+  .pred-tier-header::before {{ content:''; display:inline-block; width:10px; height:10px; border-radius:50%; }}
+  .pred-tier-imminent {{ color:#f87171; }}
+  .pred-tier-imminent::before {{ background:#ef4444; }}
+  .pred-tier-alert {{ color:#fbbf24; }}
+  .pred-tier-alert::before {{ background:#eab308; }}
+  .pred-tier-watch {{ color:#60a5fa; }}
+  .pred-tier-watch::before {{ background:#3b82f6; }}
+  .predict-alert {{ border-color:#eab308; border-left:4px solid #eab308; }}
+  .predict-watch {{ border-color:#3b82f6; border-left:4px solid #3b82f6; }}
+  .pred-meta {{ font-size:0.8em; color:#94a3b8; margin:2px 0; }}
+  .pred-tl {{ color:#c084fc; font-family:monospace; letter-spacing:0.5px; }}
 
   /* Stats Row */
   .stats {{ display:flex; gap:0.8em; margin-bottom:2em; flex-wrap:wrap; }}
@@ -1361,17 +1393,29 @@ def generate_html_report(records, analysis, exit_days):
     prediction_html = ""
     if predictions:
         pred_date = predictions[0]["prediction_date"]
-        # 按撮合時間分組
-        pred_5 = [p for p in predictions if p["disposal_minutes"] == 5]
-        pred_20 = [p for p in predictions if p["disposal_minutes"] == 20]
+        tmrw = predictions[0]["tomorrow"]
+        pred_imminent = [p for p in predictions if p["tier"] == "imminent"]
+        pred_alert = [p for p in predictions if p["tier"] == "alert"]
+        pred_watch = [p for p in predictions if p["tier"] == "watch"]
 
-        def _build_pred_items(plist):
+        def _timeline_str(p):
+            tl = p.get("clause_timeline", [])
+            return " → ".join(tl) if tl else ""
+
+        def _path_label(p):
+            path = p.get("closest_path", p.get("risk_path", "?"))
+            return f'路徑{path}'
+
+        def _build_imminent_items(plist):
             items = ""
             for p in plist:
-                if p["certain"]:
+                tl = _timeline_str(p)
+                path = _path_label(p)
+                consec = p["consecutive"]
+                if p.get("certain"):
                     condition = "一定處置"
                     cond_cls = "pred-certain"
-                else:
+                elif p.get("threshold") and p.get("pct_from_close") is not None:
                     sign = "+" if p["pct_from_close"] > 0 else ""
                     condition = f'收盤≥{p["threshold"]:.1f}({sign}{p["pct_from_close"]:.2f}%)'
                     if p["already_above"]:
@@ -1380,30 +1424,75 @@ def generate_html_report(records, analysis, exit_days):
                         cond_cls = "pred-medium"
                     else:
                         cond_cls = "pred-low"
+                else:
+                    condition = "門檻計算中"
+                    cond_cls = "pred-low"
                 items += f'''<div class="pred-item">
   <div class="pred-stock"><span class="pred-code">{p["code"]}</span> <span class="pred-name">{p["name"]}</span></div>
+  <div class="pred-meta">{path} · 連續{consec}日 · <span class="pred-tl">{tl}</span></div>
   <div class="pred-cond {cond_cls}">{condition}</div>
 </div>\n'''
             return items
 
+        def _build_tier_items(plist):
+            items = ""
+            for p in plist:
+                tl = _timeline_str(p)
+                path = _path_label(p)
+                dist = p.get("closest_dist", "?")
+                consec = p["consecutive"]
+                items += f'''<div class="pred-item">
+  <div class="pred-stock"><span class="pred-code">{p["code"]}</span> <span class="pred-name">{p["name"]}</span></div>
+  <div class="pred-meta">{path}(差{dist}天) · 連續{consec}日 · <span class="pred-tl">{tl}</span></div>
+</div>\n'''
+            return items
+
         cards = ""
-        if pred_5:
-            cards += f'''<div class="predict-card predict-5min">
-  <div class="te-title"><span class="pred-badge pred-badge-5">5</span> 5分鐘處置預測</div>
-  {_build_pred_items(pred_5)}
+        # Imminent tier (split by 5min/20min)
+        if pred_imminent:
+            imm_5 = [p for p in pred_imminent if p["disposal_minutes"] == 5]
+            imm_20 = [p for p in pred_imminent if p["disposal_minutes"] == 20]
+            sub_cards = ""
+            if imm_5:
+                sub_cards += f'''<div class="predict-card predict-5min">
+  <div class="te-title"><span class="pred-badge pred-badge-5">5</span> 5分鐘處置</div>
+  {_build_imminent_items(imm_5)}
 </div>'''
-        if pred_20:
-            cards += f'''<div class="predict-card predict-20min">
-  <div class="te-title"><span class="pred-badge pred-badge-20">20</span> 20分鐘處置預測</div>
-  {_build_pred_items(pred_20)}
+            if imm_20:
+                sub_cards += f'''<div class="predict-card predict-20min">
+  <div class="te-title"><span class="pred-badge pred-badge-20">20</span> 20分鐘處置</div>
+  {_build_imminent_items(imm_20)}
 </div>'''
+            cards += f'''<div class="pred-tier">
+  <div class="pred-tier-header pred-tier-imminent">即將處置 — 再注意1天即觸發 ({len(pred_imminent)}檔)</div>
+  <div class="pred-cards">{sub_cards}</div>
+</div>'''
+
+        # Alert tier
+        if pred_alert:
+            cards += f'''<div class="pred-tier">
+  <div class="pred-tier-header pred-tier-alert">高度警戒 — 再注意2天觸發 ({len(pred_alert)}檔)</div>
+  <div class="predict-card predict-alert">
+  {_build_tier_items(pred_alert)}
+  </div>
+</div>'''
+
+        # Watch tier
+        if pred_watch:
+            cards += f'''<div class="pred-tier">
+  <div class="pred-tier-header pred-tier-watch">持續觀察 — 再注意{pred_watch[0].get("closest_dist","3")}天+觸發 ({len(pred_watch)}檔)</div>
+  <div class="predict-card predict-watch">
+  {_build_tier_items(pred_watch)}
+  </div>
+</div>'''
+
         prediction_html = f'''<div class="pred-wrap">
-  <div style="color:#94a3b8;font-size:0.78em;margin-bottom:6px;">處置預測 ({pred_date}) — 共 {len(predictions)} 檔｜門檻：6日漲跌幅&gt;32%</div>
-  <div class="pred-cards">{cards}</div>
+  <div style="color:#94a3b8;font-size:0.78em;margin-bottom:6px;">處置風險追蹤 ({tmrw}) — 共 {len(predictions)} 檔｜注意日累積 + 款項路徑 + 價格門檻</div>
+  {cards}
 </div>'''
     else:
         prediction_html = f'''<div class="predict-card empty">
-  <div class="te-title" style="color:#475569;">\U0001F52E 後天處置預測</div>
+  <div class="te-title" style="color:#475569;">\U0001F52E 處置風險追蹤</div>
   <span class="te-none">目前無高風險預測個股</span>
 </div>'''
 
