@@ -637,6 +637,307 @@ def print_console_report(records, analysis, exit_days):
 
 
 
+# ---- 後天處置預測 ----
+
+CLAUSE_1_8 = {"一","二","三","四","五","六","七","八"}
+
+def _get_biz_days_back(from_date, n):
+    """Get the date n business days before from_date"""
+    d = from_date
+    count = 0
+    while count < n:
+        d -= timedelta(days=1)
+        if d.weekday() < 5:
+            count += 1
+    return d
+
+
+def fetch_disposal_prediction(in_disposal_codes, industry_map):
+    """
+    預測後天可能進入處置的股票。
+
+    邏輯：
+    - 路徑A：連續3天第1款注意 → 處置（找已連續2天的）
+    - 路徑B：連續5天第1-8款注意 → 處置（找已連續4天的）
+    - 計算明日收盤需達多少價位才會再觸發第1款（6日累積漲跌幅>32%門檻）
+    """
+    import time
+    today = datetime.now()
+    tomorrow = today + timedelta(days=1)
+    # Skip weekends: if tomorrow is weekend, adjust
+    while tomorrow.weekday() >= 5:
+        tomorrow += timedelta(days=1)
+    prediction_date = tomorrow + timedelta(days=1)
+    while prediction_date.weekday() >= 5:
+        prediction_date += timedelta(days=1)
+
+    print("  抓取注意交易歷史...")
+    sys.stdout.flush()
+
+    # 1. Fetch TWSE attention notices (last 20 days)
+    start = today - timedelta(days=25)
+    try:
+        url = (f"https://www.twse.com.tw/rwd/zh/announcement/notice?querytype=1"
+               f"&startDate={start.strftime('%Y%m%d')}&endDate={today.strftime('%Y%m%d')}&response=json")
+        r = requests.get(url, headers=HEADERS, timeout=15)
+        twse_att = r.json().get("data", [])
+    except Exception as e:
+        print(f"  TWSE 注意資訊抓取失敗: {e}")
+        twse_att = []
+
+    # 2. Fetch TPEx attention notices
+    try:
+        start_roc = f"{start.year-1911}/{start.strftime('%m/%d')}"
+        end_roc = f"{today.year-1911}/{today.strftime('%m/%d')}"
+        r2 = requests.post("https://www.tpex.org.tw/www/zh-tw/bulletin/attention",
+            json={"date": f"{start_roc}~{end_roc}", "code": "", "response": "json"},
+            headers=HEADERS, timeout=15)
+        tpex_att = r2.json().get("tables", [{}])[0].get("data", [])
+    except Exception as e:
+        print(f"  TPEx 注意資訊抓取失敗: {e}")
+        tpex_att = []
+
+    # 3. Parse into unified format
+    attention = []
+    for row in twse_att:
+        code = str(row[1]).strip()
+        if code.startswith("0") and len(code) > 4:
+            continue  # Skip warrants
+        name = str(row[2]).strip()
+        clause_text = str(row[4]).strip()
+        date_str = str(row[5]).strip()
+        cm = re.search(r"第(\w+)款", clause_text)
+        clause = cm.group(1) if cm else "?"
+        dm = re.match(r"(\d{2,3})\.(\d{2})\.(\d{2})", date_str)
+        dt = datetime(int(dm.group(1))+1911, int(dm.group(2)), int(dm.group(3))) if dm else None
+        try:
+            price = float(str(row[6]).strip().replace(",",""))
+        except Exception:
+            price = None
+        attention.append({"code":code,"name":name,"clause":clause,"date":dt,"price":price,"market":"twse"})
+
+    for row in tpex_att:
+        code = str(row[1]).strip()
+        if code.startswith("7") and len(code) > 4:
+            continue  # Skip warrants
+        name = str(row[2]).strip()
+        clause_text = str(row[4]).strip()
+        cm = re.search(r"第(\w+)款", clause_text)
+        clause = cm.group(1) if cm else "?"
+        ds = str(row[5]).strip()
+        dm = re.match(r"(\d{2,3})/(\d{2})/(\d{2})", ds)
+        dt = datetime(int(dm.group(1))+1911, int(dm.group(2)), int(dm.group(3))) if dm else None
+        try:
+            price = float(str(row[6]).strip().replace(",",""))
+        except Exception:
+            price = None
+        attention.append({"code":code,"name":name,"clause":clause,"date":dt,"price":price,"market":"tpex"})
+
+    if not attention:
+        return []
+
+    # 4. Group by stock, find consecutive attention
+    by_stock = defaultdict(list)
+    for r in attention:
+        if r["date"]:
+            by_stock[r["code"]].append(r)
+
+    all_dates = [r["date"] for r in attention if r["date"]]
+    latest = max(all_dates).date()
+
+    high_risk = []
+    for code, records in by_stock.items():
+        if code in in_disposal_codes:
+            continue
+        name = records[0]["name"]
+        market = records[0]["market"]
+        dates = sorted(set(r["date"].date() for r in records), reverse=True)
+        if dates[0] != latest:
+            continue
+
+        # Count consecutive business days ending at latest
+        consecutive = 1
+        check = latest
+        while True:
+            prev = check - timedelta(days=1)
+            while prev.weekday() >= 5:
+                prev -= timedelta(days=1)
+            if prev in dates:
+                consecutive += 1
+                check = prev
+            else:
+                break
+        if consecutive < 2:
+            continue
+
+        # Clauses and prices per day
+        day_clauses = defaultdict(set)
+        day_prices = {}
+        for r in records:
+            if r["date"]:
+                d = r["date"].date()
+                day_clauses[d].add(r["clause"])
+                if r["price"]:
+                    day_prices[d] = r["price"]
+
+        # Count consecutive 第1款
+        consec_1 = 0
+        check = latest
+        for _ in range(consecutive):
+            if "一" in day_clauses.get(check, set()):
+                consec_1 += 1
+            else:
+                break
+            prev = check - timedelta(days=1)
+            while prev.weekday() >= 5:
+                prev -= timedelta(days=1)
+            check = prev
+
+        # Count consecutive 第1-8款
+        consec_18 = 0
+        check = latest
+        for _ in range(consecutive):
+            if day_clauses.get(check, set()) & CLAUSE_1_8:
+                consec_18 += 1
+            else:
+                break
+            prev = check - timedelta(days=1)
+            while prev.weekday() >= 5:
+                prev -= timedelta(days=1)
+            check = prev
+
+        # Risk assessment:
+        # Path A: exactly 2 consecutive 第1款 → needs 1 more → disposal in 2 days
+        # Path B: exactly 4 consecutive 第1-8款 → needs 1 more
+        # Skip stocks that already triggered (3+ 第1款 or 5+ 第1-8款)
+        risk_path = None
+        if consec_1 == 2:
+            risk_path = "A"
+        elif consec_18 == 4 and consec_1 < 2:
+            risk_path = "B"
+        if not risk_path:
+            continue
+
+        high_risk.append({
+            "code": code, "name": name, "market": market,
+            "consec_1": consec_1, "consec_18": consec_18,
+            "consecutive": consecutive, "risk_path": risk_path,
+            "latest_price": day_prices.get(latest),
+            "day_clauses": dict(day_clauses),
+            "day_prices": day_prices,
+        })
+
+    if not high_risk:
+        return []
+
+    # 5. Fetch reference prices for threshold calculation
+    # For tomorrow's 6-day window, reference = close 6 biz days before tomorrow
+    ref_date = _get_biz_days_back(tomorrow, 6)
+    print(f"  基準日: {ref_date.strftime('%Y-%m-%d')} (明日6日窗口前一日)")
+
+    ref_prices = {}
+    # TWSE bulk prices
+    try:
+        url = (f"https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?"
+               f"date={ref_date.strftime('%Y%m%d')}&type=ALLBUT0999&response=json")
+        r = requests.get(url, headers=HEADERS, timeout=30)
+        for table in r.json().get("tables", []):
+            if len(table.get("data", [])) > 100:
+                for row in table["data"]:
+                    code = str(row[0]).strip()
+                    try:
+                        ref_prices[code] = float(str(row[8]).strip().replace(",",""))
+                    except Exception:
+                        pass
+    except Exception as e:
+        print(f"  TWSE 參考價抓取失敗: {e}")
+
+    # TPEx bulk prices
+    try:
+        url2 = (f"https://www.tpex.org.tw/www/zh-tw/afterTrading/dailyQuotes?"
+                f"date={ref_date.year-1911}/{ref_date.strftime('%m/%d')}&response=json")
+        r2 = requests.get(url2, headers=HEADERS, timeout=15)
+        for t in r2.json().get("tables", []):
+            for row in t.get("data", []):
+                code = str(row[0]).strip()
+                try:
+                    ref_prices[code] = float(str(row[2]).strip().replace(",",""))
+                except Exception:
+                    pass
+    except Exception as e:
+        print(f"  TPEx 參考價抓取失敗: {e}")
+
+    # 6. Calculate thresholds
+    predictions = []
+    for s in high_risk:
+        code = s["code"]
+        ref_p = ref_prices.get(code)
+        latest_p = s["latest_price"]
+        if not ref_p or not latest_p:
+            continue
+
+        # Direction: check if stock is rising or falling
+        direction = "up" if latest_p > ref_p else "down"
+        change_6d = (latest_p - ref_p) / ref_p * 100
+
+        # Threshold for 第1款 (32% cumulative change)
+        if direction == "up":
+            threshold = ref_p * 1.32
+        else:
+            threshold = ref_p * 0.68
+
+        # Buffer: how much can the price move against the trend and still trigger
+        if direction == "up":
+            buffer_pct = (latest_p - threshold) / latest_p * 100 if latest_p > threshold else 0
+            need_pct = (threshold - latest_p) / latest_p * 100 if latest_p < threshold else 0
+            already_above = latest_p >= threshold
+        else:
+            buffer_pct = (threshold - latest_p) / latest_p * 100 if latest_p < threshold else 0
+            need_pct = (latest_p - threshold) / latest_p * 100 if latest_p > threshold else 0
+            already_above = latest_p <= threshold
+
+        # Risk level
+        if already_above and buffer_pct > 10:
+            risk = "extreme"
+        elif already_above:
+            risk = "high"
+        elif need_pct < 3:
+            risk = "medium"
+        else:
+            risk = "low"
+
+        industry = industry_map.get(code, {}).get("industry", "")
+
+        predictions.append({
+            "code": code,
+            "name": s["name"],
+            "market": "上市" if s["market"] == "twse" else "上櫃",
+            "industry": industry,
+            "risk_path": s["risk_path"],
+            "consec_1": s["consec_1"],
+            "consec_18": s["consec_18"],
+            "consecutive": s["consecutive"],
+            "latest_price": latest_p,
+            "ref_price": ref_p,
+            "ref_date": ref_date.strftime("%m/%d"),
+            "threshold": threshold,
+            "direction": direction,
+            "change_6d": change_6d,
+            "buffer_pct": buffer_pct,
+            "need_pct": need_pct,
+            "already_above": already_above,
+            "risk": risk,
+            "tomorrow": tomorrow.strftime("%m/%d"),
+            "prediction_date": prediction_date.strftime("%m/%d"),
+        })
+
+    # Sort: extreme/high risk first, then by buffer
+    risk_order = {"extreme": 0, "high": 1, "medium": 2, "low": 3}
+    predictions.sort(key=lambda x: (risk_order.get(x["risk"], 9), -x["change_6d"]))
+    print(f"  預測候選: {len(predictions)} 檔")
+    return predictions
+
+
 def _build_html_template():
     """回傳 HTML 模板字串（深色主題，參考 aistockmap.com 風格）"""
     colgroup = """<colgroup>
@@ -690,6 +991,25 @@ def _build_html_template():
   .tomorrow-enter .te-list .te-measure {{ color:#fb923c; font-size:0.8em; margin-left:4px; }}
   .tomorrow-enter .te-none {{ color:#475569; font-size:0.9em; }}
   .tomorrow-enter.empty {{ border-color:#334155; border-left-color:#475569; }}
+
+  /* Prediction Card */
+  .predict-card {{ background:#1e293b; border:1px solid #c084fc; border-left:4px solid #a855f7; border-radius:10px; padding:1em 1.3em; min-width:240px; max-width:520px; }}
+  .predict-card .te-title {{ font-weight:700; color:#c084fc; font-size:1.05em; margin-bottom:0.5em; }}
+  .predict-card .pred-list {{ list-style:none; }}
+  .predict-card .pred-list li {{ padding:6px 0; font-size:0.88em; color:#e2e8f0; border-bottom:1px solid #334155; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px; }}
+  .predict-card .pred-list li:last-child {{ border-bottom:none; }}
+  .predict-card .pred-code {{ font-weight:700; color:#fbbf24; min-width:48px; }}
+  .predict-card .pred-name {{ margin-right:6px; }}
+  .predict-card .pred-ind {{ color:#94a3b8; font-size:0.8em; }}
+  .predict-card .pred-scenario {{ display:block; width:100%; margin-top:3px; padding:4px 8px; border-radius:6px; font-size:0.85em; }}
+  .pred-extreme {{ background:rgba(239,68,68,0.15); color:#fca5a5; border:1px solid rgba(239,68,68,0.3); }}
+  .pred-high {{ background:rgba(251,146,60,0.15); color:#fdba74; border:1px solid rgba(251,146,60,0.3); }}
+  .pred-medium {{ background:rgba(250,204,21,0.12); color:#fde047; border:1px solid rgba(250,204,21,0.25); }}
+  .pred-low {{ background:rgba(96,165,250,0.1); color:#93c5fd; border:1px solid rgba(96,165,250,0.2); }}
+  .predict-card .pred-threshold {{ font-weight:600; }}
+  .predict-card .pred-buffer {{ font-size:0.8em; color:#94a3b8; }}
+  .predict-card .te-none {{ color:#475569; font-size:0.9em; }}
+  .predict-card.empty {{ border-color:#334155; border-left-color:#475569; }}
 
   /* Stats Row */
   .stats {{ display:flex; gap:0.8em; margin-bottom:2em; flex-wrap:wrap; }}
@@ -771,6 +1091,7 @@ function switchTab(tabName) {{
   <div class="header-cards">
     {tomorrow_exit_html}
     {tomorrow_enter_html}
+    {prediction_html}
   </div>
 </div>
 
@@ -980,6 +1301,73 @@ def generate_html_report(records, analysis, exit_days):
   <span class="te-none">明日無新進處置個股</span>
 </div>'''
 
+    # 後天處置預測
+    in_disposal_codes = set(s["code"] for s in analysis["still_in"])
+    # Also exclude stocks entering disposal tomorrow
+    in_disposal_codes.update(r["code"] for r in records if r["start"] and r["start"].date() == tomorrow.date())
+    ind_map_for_pred = {}
+    for r in records:
+        if r.get("industry"):
+            ind_map_for_pred[r["code"]] = {"industry": r["industry"]}
+
+    try:
+        predictions = fetch_disposal_prediction(in_disposal_codes, ind_map_for_pred)
+    except Exception as e:
+        print(f"  後天處置預測失敗: {e}")
+        predictions = []
+
+    prediction_html = ""
+    if predictions:
+        pred_items = ""
+        risk_labels = {"extreme": "極高", "high": "高", "medium": "中", "low": "低"}
+        risk_css = {"extreme": "pred-extreme", "high": "pred-high", "medium": "pred-medium", "low": "pred-low"}
+        for p in predictions:
+            ind_tag = f' <span class="pred-ind">{p["industry"]}</span>' if p["industry"] else ""
+            risk_label = risk_labels.get(p["risk"], "")
+            css_cls = risk_css.get(p["risk"], "pred-low")
+
+            if p["risk_path"] == "A":
+                path_desc = f'已連續 {p["consec_1"]} 天第1款注意'
+            else:
+                path_desc = f'已連續 {p["consec_18"]} 天第1-8款注意'
+
+            if p["already_above"]:
+                if p["direction"] == "up":
+                    scenario = (f'6日漲幅已達 {p["change_6d"]:.1f}% — 門檻 {p["threshold"]:.2f}元 '
+                                f'(基準{p["ref_date"]}收{p["ref_price"]:.2f}) — '
+                                f'明日可跌 {p["buffer_pct"]:.1f}% 仍觸發')
+                else:
+                    scenario = (f'6日跌幅已達 {abs(p["change_6d"]):.1f}% — 門檻 {p["threshold"]:.2f}元 '
+                                f'— 明日可漲 {p["buffer_pct"]:.1f}% 仍觸發')
+            else:
+                if p["direction"] == "up":
+                    scenario = (f'6日漲幅 {p["change_6d"]:.1f}% — 門檻 {p["threshold"]:.2f}元 '
+                                f'(基準{p["ref_date"]}收{p["ref_price"]:.2f}) — '
+                                f'明日需再漲 {p["need_pct"]:.1f}% 觸發')
+                else:
+                    scenario = (f'6日跌幅 {abs(p["change_6d"]):.1f}% — 門檻 {p["threshold"]:.2f}元 '
+                                f'— 明日需再跌 {p["need_pct"]:.1f}% 觸發')
+
+            pred_items += f'''<li>
+  <span class="pred-code">{p["code"]}</span>
+  <span class="pred-name">{p["name"]}</span>{ind_tag}
+  <span class="pred-scenario {css_cls}">
+    【{risk_label}風險】{path_desc}｜今收 {p["latest_price"]:.2f}
+    <br>{scenario}
+    <br>→ 觸發後{p["prediction_date"]}進入處置
+  </span>
+</li>\n'''
+        prediction_html = f'''<div class="predict-card">
+  <div class="te-title">\U0001F52E 後天處置預測 ({predictions[0]["prediction_date"]}) — {len(predictions)} 檔高風險</div>
+  <div style="color:#94a3b8;font-size:0.78em;margin-bottom:6px;">第1款門檻：6日累積漲跌幅&gt;32%且差幅&gt;20%（差幅條件需視大盤而定）</div>
+  <ul class="pred-list">{pred_items}</ul>
+</div>'''
+    else:
+        prediction_html = f'''<div class="predict-card empty">
+  <div class="te-title" style="color:#475569;">\U0001F52E 後天處置預測</div>
+  <span class="te-none">目前無高風險預測個股</span>
+</div>'''
+
     # 統計
     total = len(records)
     still_count = len(analysis["still_in"])
@@ -1006,6 +1394,7 @@ def generate_html_report(records, analysis, exit_days):
         singles_rows=singles_rows,
         tomorrow_exit_html=tomorrow_exit_html,
         tomorrow_enter_html=tomorrow_enter_html,
+        prediction_html=prediction_html,
     )
 
 
