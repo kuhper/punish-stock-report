@@ -16,7 +16,7 @@
   python punish_tracker.py --days 5  # 只看 5 天內出關的
 """
 
-import requests, json, re, sys, argparse, csv, os
+import requests, json, re, sys, argparse, csv, os, time
 from datetime import datetime, timedelta
 from pathlib import Path
 from collections import defaultdict, Counter
@@ -64,85 +64,113 @@ def parse_period(period_str):
 # ---- 資料抓取 ----
 
 def fetch_twse_punish():
-    """抓 TWSE 上市處置股"""
+    """抓 TWSE 上市處置股，含重試機制"""
     url = "https://www.twse.com.tw/rwd/zh/announcement/punish?response=json"
-    r = requests.get(url, headers=HEADERS, timeout=15)
-    r.raise_for_status()
-    d = r.json()
-    if d.get("stat") != "OK" or not d.get("data"):
-        return []
-    results = []
-    for row in d["data"]:
-        code = str(row[2]).strip()
-        name = str(row[3]).strip()
-        condition = str(row[5]).strip()
-        period_str = str(row[6]).strip()
-        measure = str(row[7]).strip()
-        content = str(row[8]).strip()
-        start_date, end_date = parse_period(period_str)
-        reason = _extract_reason(content)
-        measures = _extract_measures(content)
-        results.append({
-            "code": code,
-            "name": name,
-            "market": "上市",
-            "condition": condition,
-            "measure": measure,
-            "start": start_date,
-            "end": end_date,
-            "period_str": period_str,
-            "reason": reason,
-            "match_interval": measures["match_interval"],
-            "precollect": measures["precollect"],
-            "margin": measures["margin"],
-        })
-    return results
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=20)
+            r.raise_for_status()
+            d = r.json()
+            if d.get("stat") != "OK" or not d.get("data"):
+                if attempt < max_retries:
+                    print(f"  TWSE 回傳無資料，重試 {attempt}/{max_retries}")
+                    time.sleep(3 * attempt)
+                    continue
+                return []
+            results = []
+            for row in d["data"]:
+                code = str(row[2]).strip()
+                name = str(row[3]).strip()
+                condition = str(row[5]).strip()
+                period_str = str(row[6]).strip()
+                measure = str(row[7]).strip()
+                content = str(row[8]).strip()
+                start_date, end_date = parse_period(period_str)
+                reason = _extract_reason(content)
+                measures = _extract_measures(content)
+                results.append({
+                    "code": code,
+                    "name": name,
+                    "market": "上市",
+                    "condition": condition,
+                    "measure": measure,
+                    "start": start_date,
+                    "end": end_date,
+                    "period_str": period_str,
+                    "reason": reason,
+                    "match_interval": measures["match_interval"],
+                    "precollect": measures["precollect"],
+                    "margin": measures["margin"],
+                })
+            if attempt > 1:
+                print(f"  TWSE 第 {attempt} 次重試成功")
+            return results
+        except Exception as e:
+            print(f"  TWSE 抓取失敗 (第{attempt}次): {e}")
+            if attempt < max_retries:
+                time.sleep(3 * attempt)
+            else:
+                print(f"  TWSE {max_retries} 次重試均失敗")
+                return []
 
 
 def fetch_tpex_punish():
-    """抓 TPEx 上櫃處置股 (OpenAPI)"""
+    """抓 TPEx 上櫃處置股 (OpenAPI)，含重試機制"""
     url = "https://www.tpex.org.tw/openapi/v1/tpex_disposal_information"
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=15)
-        r.raise_for_status()
-        rows = r.json()
-        if not isinstance(rows, list):
-            return []
-        results = []
-        for row in rows:
-            code = row.get("SecuritiesCompanyCode", "").strip()
-            name = row.get("CompanyName", "").strip()
-            period_raw = row.get("DispositionPeriod", "").strip()
-            reason_raw = row.get("DispositionReasons", "").strip()
-            content = row.get("DisposalCondition", "").strip()
-            # 轉換期間格式: "1150512~1150525" -> "115/05/12～115/05/25"
-            period_str = _convert_tpex_period(period_raw)
-            start_date, end_date = parse_period(period_str)
-            # 判斷處置層級
-            if "曾發布處置" in content or "第二次" in content:
-                measure = "第二次處置"
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=20)
+            r.raise_for_status()
+            rows = r.json()
+            if not isinstance(rows, list):
+                print(f"  TPEx 回傳非陣列，重試 {attempt}/{max_retries}")
+                if attempt < max_retries:
+                    time.sleep(3 * attempt)
+                    continue
+                return []
+            results = []
+            for row in rows:
+                code = row.get("SecuritiesCompanyCode", "").strip()
+                name = row.get("CompanyName", "").strip()
+                period_raw = row.get("DispositionPeriod", "").strip()
+                reason_raw = row.get("DispositionReasons", "").strip()
+                content = row.get("DisposalCondition", "").strip()
+                # 轉換期間格式: "1150512~1150525" -> "115/05/12～115/05/25"
+                period_str = _convert_tpex_period(period_raw)
+                start_date, end_date = parse_period(period_str)
+                # 判斷處置層級
+                if "曾發布處置" in content or "第二次" in content:
+                    measure = "第二次處置"
+                else:
+                    measure = "第一次處置"
+                reason = _extract_reason(content)
+                measures = _extract_measures(content)
+                results.append({
+                    "code": code,
+                    "name": name,
+                    "market": "上櫃",
+                    "condition": reason_raw,
+                    "measure": measure,
+                    "start": start_date,
+                    "end": end_date,
+                    "period_str": period_str,
+                    "reason": reason,
+                    "match_interval": measures["match_interval"],
+                    "precollect": measures["precollect"],
+                    "margin": measures["margin"],
+                })
+            if attempt > 1:
+                print(f"  TPEx 第 {attempt} 次重試成功")
+            return results
+        except Exception as e:
+            print(f"  TPEx 抓取失敗 (第{attempt}次): {e}")
+            if attempt < max_retries:
+                time.sleep(3 * attempt)
             else:
-                measure = "第一次處置"
-            reason = _extract_reason(content)
-            measures = _extract_measures(content)
-            results.append({
-                "code": code,
-                "name": name,
-                "market": "上櫃",
-                "condition": reason_raw,
-                "measure": measure,
-                "start": start_date,
-                "end": end_date,
-                "period_str": period_str,
-                "reason": reason,
-                "match_interval": measures["match_interval"],
-                "precollect": measures["precollect"],
-                "margin": measures["margin"],
-            })
-        return results
-    except Exception as e:
-        print(f"  TPEx 抓取失敗: {e}")
-        return []
+                print(f"  TPEx {max_retries} 次重試均失敗，跳過上櫃資料")
+                return []
 
 
 def _convert_tpex_period(raw):
