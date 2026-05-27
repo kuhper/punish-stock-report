@@ -197,8 +197,6 @@ def _extract_reason(content):
         reason = "連續3日+當沖標準"
     else:
         reason = "達注意交易資訊標準"
-    if "當日沖銷" in content and "連續三" in content:
-        reason = "連續3日+當沖標準"
     return reason
 
 
@@ -250,91 +248,6 @@ def _extract_measures(content):
 
 # ---- 產業分類 ----
 
-
-def fetch_attention_details(records):
-    """為每檔 TWSE 股票抓取注意交易資訊的具體觸發條件（漲幅、週轉率等）"""
-    import time
-    for r in records:
-        code = r["code"]
-        if r.get("market") != "上市":
-            # TPEx: 從 condition 欄位解析
-            cond = r.get("condition", "")
-            if "第一款" in cond:
-                r["attention_detail"] = "股價漲跌幅/週轉率異常"
-            elif "第二款" in cond:
-                r["attention_detail"] = "成交量集中異常"
-            elif "第三款" in cond:
-                r["attention_detail"] = "融資融券異常"
-            else:
-                r["attention_detail"] = ""
-            continue
-        # TWSE: 呼叫注意交易資訊 API
-        try:
-            if r.get("start"):
-                sd = r["start"] - __import__("datetime").timedelta(days=30)
-                start_str = sd.strftime("%Y%m%d")
-            else:
-                start_str = "20260401"
-            if r.get("end"):
-                end_str = r["start"].strftime("%Y%m%d") if r.get("start") else "20260524"
-            else:
-                end_str = "20260524"
-            url = f"https://www.twse.com.tw/rwd/zh/announcement/notice?querytype=2&startDate={start_str}&endDate={end_str}&stockNo={code}&response=json"
-            resp = requests.get(url, headers=HEADERS, timeout=10)
-            d = resp.json()
-            if d.get("stat") == "OK" and d.get("data"):
-                # 取最近一筆
-                latest = d["data"][0]
-                detail_raw = latest[4]  # 注意交易資訊欄位
-                r["attention_detail"] = _parse_attention_text(detail_raw)
-            else:
-                r["attention_detail"] = ""
-            time.sleep(0.3)  # 避免太頻繁
-        except Exception as e:
-            print(f"  注意資訊查詢失敗 {code}: {e}")
-            r["attention_detail"] = ""
-
-
-def _parse_attention_text(text):
-    """解析注意交易資訊文字，提取關鍵數據"""
-    parts = []
-    # 漲幅
-    m = re.search(r'累積收盤價漲幅達([\d.]+)%', text)
-    if m:
-        parts.append(f"漲幅{m.group(1)}%")
-    # 跌幅
-    m = re.search(r'累積收盤價跌幅達([\d.]+)%', text)
-    if m:
-        parts.append(f"跌幅{m.group(1)}%")
-    # 週轉率
-    m = re.search(r'週轉率為([\d.]+)%', text)
-    if m:
-        parts.append(f"週轉率{m.group(1)}%")
-    # 成交量倍數
-    m = re.search(r'日平均成交量之([\d.]+)倍', text)
-    if m:
-        parts.append(f"量{m.group(1)}倍")
-    # 券商集中
-    m = re.search(r'([一-鿿]+證券商)買進之比率為([\d.]+)%', text)
-    if m:
-        parts.append(f"{m.group(1)}集中{m.group(2)}%")
-    # 價差
-    m = re.search(r'收盤價價差達([\d.]+)\s*元', text)
-    if m:
-        parts.append(f"價差{m.group(1)}元")
-    # 30日漲幅
-    m = re.search(r'三十個營業日.*?收盤價漲幅達([\d.]+)%', text)
-    if m:
-        parts.append(f"月漲{m.group(1)}%")
-    # 款別
-    clauses = re.findall(r'﹝第([一二三四五六七八九十]+)款﹞', text)
-    if not parts and clauses:
-        clause_map = {"一":"價格異常","二":"成交量異常","三":"成交量暴增","四":"週轉率異常","五":"券商集中"}
-        for c in clauses:
-            if c in clause_map:
-                parts.append(clause_map[c])
-
-    return " + ".join(parts) if parts else ""
 
 def load_sub_industry_csv():
     """從系產業 CSV 載入細產業、所有細產業、產業地位"""
@@ -614,54 +527,6 @@ def analyze_clusters(records, industry_map, exit_days=7):
         "exit_cutoff": exit_cutoff,
     }
 
-
-# ---- 輸出 ----
-
-def print_console_report(records, analysis, exit_days):
-    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    print(f"\n{'='*70}")
-    print(f"  台股處置股追蹤報告")
-    print(f"  查詢時間: {today.strftime('%Y-%m-%d %H:%M')}  |  處置股總數: {len(records)} 檔")
-    print(f"{'='*70}")
-
-    # 族群聚集
-    print(f"\n■ 族群聚集分析（依產業分類）")
-    by_ind = analysis["by_industry"]
-    cluster_totals = analysis.get("cluster_totals", {})
-    for ind in sorted(by_ind.keys(), key=lambda x: (x == "衍生商品", -len(by_ind[x]))):
-        stocks = by_ind[ind]
-        if len(stocks) < 2:
-            continue
-        total = cluster_totals.get(ind, 0)
-        total_str = f"族群 {total} 檔，" if total > 0 else ""
-        print(f"\n  【{ind}】{total_str}處置 {len(stocks)} 檔:")
-        for s in stocks:
-            exit_dt = s["end"] + timedelta(days=1) if s["end"] else None; end_str = exit_dt.strftime("%m/%d") if exit_dt else "?"
-            days_left = (s["end"] - today).days if s["end"] else "?"
-            status = f"剩 {days_left+1} 天" if isinstance(days_left, int) and days_left >= 0 else "已出關"
-            mi = s.get("match_interval", "")
-            pc = s.get("precollect", "")
-            mg = s.get("margin", "")
-            print(f"    {s['code']} {s['name']:<8} {s['measure']:<8} {mi:<6} {pc:<8} {mg:<8} 出關 {end_str} ({status})")
-
-    # 即將出關
-    print(f"\n■ {exit_days} 天內即將出關")
-    if analysis["upcoming_exits"]:
-        for s in analysis["upcoming_exits"]:
-            exit_dt = s["end"] + timedelta(days=1); end_str = exit_dt.strftime("%Y-%m-%d")
-            days_left = (s["end"] - today).days + 1
-            print(f"  {s['code']} {s['name']:<8} [{s['industry']}]  出關日: {end_str} (剩 {days_left} 天)")
-    else:
-        print(f"  （無）")
-
-    # 單獨被處置
-    singles = {ind: stocks for ind, stocks in by_ind.items() if len(stocks) == 1}
-    if singles:
-        print(f"\n■ 單獨被處置（族群無聚集）")
-        for ind, stocks in singles.items():
-            s = stocks[0]
-            exit_dt = s["end"] + timedelta(days=1) if s["end"] else None; end_str = exit_dt.strftime("%m/%d") if exit_dt else "?"
-            print(f"  {s['code']} {s['name']:<8} [{ind}]  出關 {end_str} | {s['reason']}")
 
 
 
@@ -1020,11 +885,6 @@ def fetch_disposal_prediction(in_disposal_codes, industry_map, recent_disposal_c
 
 def _build_html_template():
     """回傳 HTML 模板字串（深色主題，參考 aistockmap.com 風格）"""
-    colgroup = """<colgroup>
-<col style="width:60px"><col style="width:72px"><col style="width:130px">
-<col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px">
-<col style="width:140px"><col style="width:135px"><col style="width:105px">
-</colgroup>"""
     colgroup_singles = """<colgroup>
 <col style="width:60px"><col style="width:72px"><col style="width:85px"><col style="width:110px">
 <col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px">
@@ -1048,17 +908,17 @@ def _build_html_template():
   .container {{ max-width:1440px; margin:0 auto; padding:2em 2.5em; }}
 
   /* Header */
-  .header-wrap {{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1em; margin-bottom:1.5em; }}
+  .header-wrap {{ display:flex; flex-direction:column; gap:1em; margin-bottom:1.5em; }}
   .header-left {{ flex:1; min-width:0; }}
   .header-left h1 {{ font-size:2em; font-weight:700; color:#f8fafc; margin-bottom:0.35em; letter-spacing:0.02em; }}
   .header-left h1 span {{ background:linear-gradient(135deg,#a78bfa,#818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }}
   .subtitle {{ color:#64748b; font-size:0.9em; }}
 
   /* Header Cards Container */
-  .header-cards {{ display:flex; flex-direction:column; gap:0.8em; }}
+  .header-cards {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:1em; align-items:start; }}
 
   /* Tomorrow Exit Card */
-  .tomorrow-exit {{ background:#1e293b; border:1px solid #f87171; border-left:4px solid #ef4444; border-radius:10px; padding:1em 1.3em; min-width:240px; max-width:380px; }}
+  .tomorrow-exit {{ background:#1e293b; border:1px solid #f87171; border-left:4px solid #ef4444; border-radius:10px; padding:1em 1.3em; min-width:240px; }}
   .tomorrow-exit .te-title {{ font-weight:700; color:#f87171; font-size:1.05em; margin-bottom:0.5em; display:flex; align-items:center; gap:0.5em; }}
   .tomorrow-exit .te-list {{ list-style:none; }}
   .tomorrow-exit .te-list li {{ padding:5px 0; font-size:0.92em; color:#e2e8f0; border-bottom:1px solid #334155; }}
@@ -1069,7 +929,7 @@ def _build_html_template():
   .tomorrow-exit.empty {{ border-color:#334155; border-left-color:#475569; }}
 
   /* Tomorrow Enter Card */
-  .tomorrow-enter {{ background:#1e293b; border:1px solid #38bdf8; border-left:4px solid #0ea5e9; border-radius:10px; padding:1em 1.3em; min-width:240px; max-width:380px; }}
+  .tomorrow-enter {{ background:#1e293b; border:1px solid #38bdf8; border-left:4px solid #0ea5e9; border-radius:10px; padding:1em 1.3em; min-width:240px; }}
   .tomorrow-enter .te-title {{ font-weight:700; color:#38bdf8; font-size:1.05em; margin-bottom:0.5em; display:flex; align-items:center; gap:0.5em; }}
   .tomorrow-enter .te-list {{ list-style:none; }}
   .tomorrow-enter .te-list li {{ padding:5px 0; font-size:0.92em; color:#e2e8f0; border-bottom:1px solid #334155; }}
@@ -1081,9 +941,9 @@ def _build_html_template():
   .tomorrow-enter.empty {{ border-color:#334155; border-left-color:#475569; }}
 
   /* Prediction Cards */
-  .pred-wrap {{ margin-bottom:0.5em; }}
+  .pred-wrap {{ margin-bottom:0.5em; grid-column:1/-1; }}
   .pred-cards {{ display:flex; gap:1em; flex-wrap:wrap; }}
-  .predict-card {{ background:#1e293b; border:1px solid #334155; border-radius:10px; padding:1em 1.3em; min-width:240px; max-width:420px; flex:1; }}
+  .predict-card {{ background:#1e293b; border:1px solid #334155; border-radius:10px; padding:1em 1.3em; min-width:240px; flex:1; }}
   .predict-5min {{ border-color:#f87171; border-left:4px solid #ef4444; }}
   .predict-5min .te-title {{ color:#f87171; }}
   .predict-20min {{ border-color:#fb923c; border-left:4px solid #f97316; }}
@@ -1171,8 +1031,7 @@ def _build_html_template():
     .stats {{ gap:0.5em; }}
     .stat-card {{ min-width:100px; padding:0.7em 0.8em; }}
     .stat-card .num {{ font-size:1.6em; }}
-    .header-wrap {{ flex-direction:column; }}
-    .tomorrow-exit {{ max-width:100%; }}
+    .header-cards {{ grid-template-columns:1fr; }}
     table {{ font-size:0.82em; }}
     thead th, tbody td {{ padding:6px; }}
   }}
@@ -1252,7 +1111,21 @@ function switchTab(tabName) {{
 </div>
 </body></html>"""
 
-def generate_html_report(records, analysis, exit_days):
+
+def _status_tag(days_left, exit_str):
+    """產生處置狀態標籤 HTML"""
+    if days_left < 0:
+        return f'<span class="tag-out">{exit_str} 09:00已出關</span>'
+    elif days_left == 0:
+        return f'<span class="tag-soon">明日 {exit_str} 09:00出關</span>'
+    elif days_left <= 3:
+        return f'<span class="tag-soon">剩 {days_left+1} 天 ({exit_str}出關)</span>'
+    elif days_left <= 7:
+        return f'<span class="tag-near">剩 {days_left+1} 天 ({exit_str}出關)</span>'
+    else:
+        return f'<span class="tag-in">剩 {days_left+1} 天</span>'
+
+def generate_html_report(records, analysis, exit_days, industry_map=None):
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     by_ind = analysis["by_industry"]
 
@@ -1274,16 +1147,7 @@ def generate_html_report(records, analysis, exit_days):
             # 出關日 = 處置結束日隔天 09:00（結束日當天仍在處置中）
             exit_date = s["end"] + timedelta(days=1) if s["end"] else None
             exit_str = exit_date.strftime("%m/%d") if exit_date else ""
-            if days_left < 0:
-                status_html = f'<span class="tag-out">{exit_str} 09:00已出關</span>'
-            elif days_left == 0:
-                status_html = f'<span class="tag-soon">明日 {exit_str} 09:00出關</span>'
-            elif days_left <= 3:
-                status_html = f'<span class="tag-soon">剩 {days_left+1} 天 ({exit_str}出關)</span>'
-            elif days_left <= 7:
-                status_html = f'<span class="tag-near">剩 {days_left+1} 天 ({exit_str}出關)</span>'
-            else:
-                status_html = f'<span class="tag-in">剩 {days_left+1} 天</span>'
+            status_html = _status_tag(days_left, exit_str)
             multi_name = ""
             multi_reason = f' (累計{s["total_records"]}次)' if s["total_records"] > 1 else ""
             pos = s.get("position", "")
@@ -1323,15 +1187,7 @@ def generate_html_report(records, analysis, exit_days):
         days_left = (s["end"] - today).days if s["end"] else 999
         exit_date = s["end"] + timedelta(days=1) if s["end"] else None
         exit_str = exit_date.strftime("%m/%d") if exit_date else ""
-        if days_left < 0:
-            # exit date already computed above
-            status_html = f'<span class="tag-out">{exit_str} 09:00已出關</span>'
-        elif days_left == 0:
-            status_html = f'<span class="tag-soon">明日 {exit_str} 09:00出關</span>'
-        elif days_left <= 3:
-            status_html = f'<span class="tag-soon">剩 {days_left+1} 天 ({exit_str}出關)</span>'
-        else:
-            status_html = f'<span class="tag-in">剩 {days_left+1} 天</span>'
+        status_html = _status_tag(days_left, exit_str)
         pos = s.get("position", "")
         cap = s.get("market_cap", "")
         cap_html = f'{cap}億' if cap else ""
@@ -1408,13 +1264,9 @@ def generate_html_report(records, analysis, exit_days):
     in_disposal_codes.update(r["code"] for r in records if r["start"] and r["start"].date() == tomorrow.date())
     # 近期曾處置的股票（用於判定再犯 → 20分鐘撮合）
     recent_disposal_codes = set(r["code"] for r in records)
-    ind_map_for_pred = {}
-    for r in records:
-        if r.get("industry"):
-            ind_map_for_pred[r["code"]] = {"industry": r["industry"]}
 
     try:
-        predictions = fetch_disposal_prediction(in_disposal_codes, ind_map_for_pred, recent_disposal_codes)
+        predictions = fetch_disposal_prediction(in_disposal_codes, industry_map or {}, recent_disposal_codes)
     except Exception as e:
         print(f"  後天處置預測失敗: {e}")
         predictions = []
@@ -1785,20 +1637,6 @@ def main():
     deduped = deduplicate(all_records)
     print(f"去重後: {len(deduped)} 筆（含已出關）")
 
-    # 產業對照
-    for r in deduped:
-        code = r["code"]
-        if code in ind_map:
-            r["industry"] = ind_map[code].get("industry", "")
-            r["all_subs"] = ind_map[code].get("all_subs", "").split(",") if ind_map[code].get("all_subs") else []
-            r["position"] = ind_map[code].get("position", "")
-            r["market_cap"] = ind_map[code].get("market_cap", "")
-        else:
-            r["industry"] = r.get("industry", "")
-            r["all_subs"] = []
-            r["position"] = ""
-            r["market_cap"] = ""
-
     # 分析
     analysis = analyze_clusters(deduped, ind_map, exit_days=args.days)
     print(f"仍在處置: {len(analysis['still_in'])} 檔")
@@ -1806,7 +1644,7 @@ def main():
 
     # HTML 報告
     if not args.no_html:
-        html = generate_html_report(all_records, analysis, args.days)
+        html = generate_html_report(all_records, analysis, args.days, ind_map)
         date_str = datetime.now().strftime("%Y%m%d")
         report_path = DATA_DIR / f"punish_{date_str}.html"
         report_path.write_text(html, encoding="utf-8")
