@@ -172,12 +172,10 @@ function switchTab(tabName) {
     <p class="subtitle">更新時間: 2026-07-23 00:00 ｜ 每日 07:00 / 19:00 / 21:00 自動更新 ｜ 資料來源: 證交所/櫃買中心</p>
   </div>
   <div class="header-cards">
-    <div class="tomorrow-exit">
-  <div class="te-title">🔔 明日恢復正常交易 (07/24) — 1 檔</div>
-  <ul class="te-list"><li><span class="te-code">4169</span>泰宗 <span class="te-ind">新藥研發</span></li>
-</ul>
+    <div class="tomorrow-exit empty">
+  <div class="te-title" style="color:#475569;">出關預告 (07/24)</div>
+  <span class="te-none">明日無出關個股</span>
 </div>
-
     <div class="tomorrow-enter">
   <div class="te-title">🚨 明日進入處置 (07/24) — 3 檔 (+3檔衍生商品)</div>
   <ul class="te-list"><li><span class="te-code">6182</span>合晶 <span class="te-ind">矽晶圓</span> <span class="te-measure">第一次處置</span></li>
@@ -186,9 +184,9 @@ function switchTab(tabName) {
 </ul>
 </div>
     <div class="pred-wrap">
-  <div style="color:#94a3b8;font-size:0.78em;margin-bottom:6px;">處置風險追蹤 (07/24) — 共 7 檔｜注意日累積 + 款項路徑 + 價格門檻</div>
+  <div style="color:#94a3b8;font-size:0.78em;margin-bottom:6px;">處置風險追蹤 (07/24) — 共 5 檔｜注意日累積 + 款項路徑 + 價格門檻</div>
   <div class="pred-tier">
-  <div class="pred-tier-header pred-tier-imminent">即將處置 — 再注意1天即觸發 (4檔)</div>
+  <div class="pred-tier-header pred-tier-imminent">即將處置 — 再注意1天即觸發 (3檔)</div>
   <div class="pred-cards"><div class="predict-card predict-5min">
   <div class="te-title"><span class="pred-badge pred-badge-5">5</span> 5分鐘處置</div>
   <div class="pred-item">
@@ -206,11 +204,6 @@ function switchTab(tabName) {
   <div class="pred-meta">路徑A · 連續4日 · <span class="pred-tl">6 → 6 → 1 → 1</span></div>
   <div class="pred-cond pred-low">收盤≥165.2(-13.26%)</div>
 </div>
-<div class="pred-item">
-  <div class="pred-stock"><span class="pred-code">49231</span> <span class="pred-name">力士一</span></div>
-  <div class="pred-meta">路徑A · 連續2日 · <span class="pred-tl">1 → 1</span></div>
-  <div class="pred-cond pred-low">門檻計算中</div>
-</div>
 
 </div></div>
 </div><div class="pred-tier">
@@ -226,24 +219,15 @@ function switchTab(tabName) {
 </div>
 
   </div>
-</div><div class="pred-tier">
-  <div class="pred-tier-header pred-tier-watch">持續觀察 — 再注意3天+觸發 (1檔)</div>
-  <div class="predict-card predict-watch">
-  <div class="pred-item">
-  <div class="pred-stock"><span class="pred-code">3374</span> <span class="pred-name">精材</span></div>
-  <div class="pred-meta">路徑B(差3天) · 連續2日 · <span class="pred-tl">6 → 6</span></div>
-</div>
-
-  </div>
 </div>
 </div>
   </div>
 </div>
 
 <div class="stats">
-  <div class="stat-card danger"><div class="num">46</div><div class="label">處置公告總筆數</div></div>
-  <div class="stat-card warn"><div class="num">38</div><div class="label">目前仍在處置</div></div>
-  <div class="stat-card info"><div class="num">2</div><div class="label">3天內出關</div></div>
+  <div class="stat-card danger"><div class="num">45</div><div class="label">處置公告總筆數</div></div>
+  <div class="stat-card warn"><div class="num">37</div><div class="label">目前仍在處置</div></div>
+  <div class="stat-card info"><div class="num">1</div><div class="label">3天內出關</div></div>
   <div class="stat-card purple"><div class="num">4</div><div class="label">聚集族群數</div></div>
   <div class="stat-card danger"><div class="num">5</div><div class="label">最大族群 (分離式元件)</div></div>
 </div>
@@ -316,8 +300,7 @@ function switchTab(tabName) {
 <div class="cluster-card">
 <table>
   <thead><tr><th style="width:90px">出關日</th><th style="width:70px">倒數</th><th style="width:50px">檔數</th><th>個股</th></tr></thead>
-  <tbody><tr><td>2026-07-24</td><td>明日恢復</td><td><strong>1</strong> 檔</td><td>4169 泰宗(新藥研發)</td></tr>
-<tr><td>2026-07-25</td><td>剩 2 天</td><td><strong>1</strong> 檔</td><td>8261 富鼎(電晶體)</td></tr>
+  <tbody><tr><td>2026-07-25</td><td>剩 2 天</td><td><strong>1</strong> 檔</td><td>8261 富鼎(電晶體)</td></tr>
 <tr class="highlight"><td>2026-07-28</td><td>剩 5 天</td><td><strong>2</strong> 檔</td><td>8027 鈦昇(封測用設備), 80273 鈦昇三(衍生商品)</td></tr>
 <tr class="highlight"><td>2026-07-29</td><td>剩 6 天</td><td><strong>5</strong> 檔</td><td>052974 今國光統一5C購02(衍生商品), 6831 邁科(其他散熱零件), 4542 科嶠(PCB相關設備), 45421 科嶠一(衍生商品), 4556 旭然(水資源設備／耗材)</td></tr>
 <tr class="highlight"><td>2026-07-30</td><td>剩 7 天</td><td><strong>4</strong> 檔</td><td>8096 擎亞(IC零組件通路商), 80962 擎亞二(衍生商品), 80963 擎亞三(衍生商品), 8291 尚茂(銅箔基板)</td></tr>
@@ -351,7 +334,6 @@ function switchTab(tabName) {
 <tr><td class="code">8027</td><td>鈦昇</td><td>封測用設備</td><td class="pos wrap" title="專業於半導體、主機板、高階基板材料等設備廠商">專業於半導體、主機板、高階基板材料等設備廠商</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/07/14～115/07/27</td><td class="status"><span class="tag-near">剩 5 天 (07/28出關)</span></td></tr>
 <tr><td class="code">8383</td><td>千附</td><td>廠務工程</td><td class="pos wrap" title="TFT-LCD及半導體廠無塵室供應商">TFT-LCD及半導體廠無塵室供應商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/07/20～115/07/31</td><td class="status"><span class="tag-in">剩 9 天</span></td></tr>
 <tr><td class="code">6217</td><td>中探針</td><td>探針、探針卡</td><td class="pos wrap" title="台灣第一家探針及探針式連接器製造廠">台灣第一家探針及探針式連接器製造廠</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/07/23～115/08/05</td><td class="status"><span class="tag-in">剩 14 天</span></td></tr>
-<tr><td class="code">4169</td><td>泰宗</td><td>新藥研發</td><td class="pos wrap" title="專注肝癌檢測與泌尿道新藥研發廠商">專注肝癌檢測與泌尿道新藥研發廠商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">連續3日達注意標準</td><td>115/07/10～115/07/23</td><td class="status"><span class="tag-soon">明日 07/24 09:00出關</span></td></tr>
 <tr><td class="code">4556</td><td>旭然</td><td>水資源設備／耗材</td><td class="pos wrap" title="台灣最大的工業過濾設備製造商">台灣最大的工業過濾設備製造商</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/07/15～115/07/28</td><td class="status"><span class="tag-near">剩 6 天 (07/29出關)</span></td></tr>
 <tr><td class="code">6683</td><td>雍智科技</td><td>測試用板卡</td><td class="pos wrap" title="台灣IC測試設備材料供應商">台灣IC測試設備材料供應商</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/07/22～115/08/04</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
 <tr><td class="code">6174</td><td>安碁</td><td>石英元件</td><td class="pos wrap" title="台灣三大石英元件廠之一">台灣三大石英元件廠之一</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/07/09～115/07/22</td><td class="status"><span class="tag-out">07/23 09:00已出關</span></td></tr>
