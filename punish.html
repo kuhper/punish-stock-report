@@ -172,18 +172,16 @@ function switchTab(tabName) {
     <p class="subtitle">更新時間: 2026-07-24 00:00 ｜ 每日 07:00 / 19:00 / 21:00 自動更新 ｜ 資料來源: 證交所/櫃買中心</p>
   </div>
   <div class="header-cards">
-    <div class="tomorrow-exit">
-  <div class="te-title">🔔 明日恢復正常交易 (07/25) — 1 檔</div>
-  <ul class="te-list"><li><span class="te-code">8261</span>富鼎 <span class="te-ind">電晶體</span></li>
-</ul>
+    <div class="tomorrow-exit empty">
+  <div class="te-title" style="color:#475569;">出關預告 (07/25)</div>
+  <span class="te-none">明日無出關個股</span>
 </div>
-
     <div class="tomorrow-enter empty">
   <div class="te-title" style="color:#475569;">進場預告 (07/25)</div>
   <span class="te-none">明日無新進處置個股</span>
 </div>
     <div class="pred-wrap">
-  <div style="color:#94a3b8;font-size:0.78em;margin-bottom:6px;">處置風險追蹤 (07/27) — 共 9 檔｜注意日累積 + 款項路徑 + 價格門檻</div>
+  <div style="color:#94a3b8;font-size:0.78em;margin-bottom:6px;">處置風險追蹤 (07/27) — 共 6 檔｜注意日累積 + 款項路徑 + 價格門檻</div>
   <div class="pred-tier">
   <div class="pred-tier-header pred-tier-imminent">即將處置 — 再注意1天即觸發 (2檔)</div>
   <div class="pred-cards"><div class="predict-card predict-5min">
@@ -214,7 +212,7 @@ function switchTab(tabName) {
 
   </div>
 </div><div class="pred-tier">
-  <div class="pred-tier-header pred-tier-watch">持續觀察 — 再注意3天+觸發 (5檔)</div>
+  <div class="pred-tier-header pred-tier-watch">持續觀察 — 再注意3天+觸發 (2檔)</div>
   <div class="predict-card predict-watch">
   <div class="pred-item">
   <div class="pred-stock"><span class="pred-code">2455</span> <span class="pred-name">全新</span></div>
@@ -224,18 +222,6 @@ function switchTab(tabName) {
   <div class="pred-stock"><span class="pred-code">6166</span> <span class="pred-name">凌華</span></div>
   <div class="pred-meta">路徑B(差3天) · 連續2日 · <span class="pred-tl">2 → 2</span></div>
 </div>
-<div class="pred-item">
-  <div class="pred-stock"><span class="pred-code">3163</span> <span class="pred-name">波若威</span></div>
-  <div class="pred-meta">路徑B(差3天) · 連續2日 · <span class="pred-tl">6 → 6</span></div>
-</div>
-<div class="pred-item">
-  <div class="pred-stock"><span class="pred-code">4979</span> <span class="pred-name">華星光</span></div>
-  <div class="pred-meta">路徑B(差3天) · 連續2日 · <span class="pred-tl">6 → 6</span></div>
-</div>
-<div class="pred-item">
-  <div class="pred-stock"><span class="pred-code">4991</span> <span class="pred-name">環宇-KY</span></div>
-  <div class="pred-meta">路徑B(差3天) · 連續2日 · <span class="pred-tl">6 → 6</span></div>
-</div>
 
   </div>
 </div>
@@ -244,29 +230,16 @@ function switchTab(tabName) {
 </div>
 
 <div class="stats">
-  <div class="stat-card danger"><div class="num">50</div><div class="label">處置公告總筆數</div></div>
-  <div class="stat-card warn"><div class="num">44</div><div class="label">目前仍在處置</div></div>
-  <div class="stat-card info"><div class="num">3</div><div class="label">3天內出關</div></div>
+  <div class="stat-card danger"><div class="num">49</div><div class="label">處置公告總筆數</div></div>
+  <div class="stat-card warn"><div class="num">43</div><div class="label">目前仍在處置</div></div>
+  <div class="stat-card info"><div class="num">2</div><div class="label">3天內出關</div></div>
   <div class="stat-card purple"><div class="num">4</div><div class="label">聚集族群數</div></div>
-  <div class="stat-card danger"><div class="num">5</div><div class="label">最大族群 (分離式元件)</div></div>
+  <div class="stat-card danger"><div class="num">5</div><div class="label">最大族群 (MLCC)</div></div>
 </div>
 
 <div class="section">
 <div class="section-title">族群聚集分析</div>
 
-<div class="cluster-card">
-  <h3><span class="badge" style="background:#dc2626">處置 5</span> 分離式元件<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 22 檔</span></h3><div style="margin-top:4px"><span class="related-tag">二極體</span> <span class="related-tag">矽晶圓</span> <span class="related-tag">電晶體</span></div>
-  <table>
-    <colgroup><col style="width:60px"><col style="width:72px"><col style="width:130px"><col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px"><col style="width:140px"><col style="width:135px"><col style="width:105px"></colgroup>
-    <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
-    <tbody><tr><td class="code">8261</td><td>富鼎</td><td class="pos wrap" title="提供MOSFET、IGBT和電源IC之解決方案商">提供MOSFET、IGBT和電源IC之解決方案商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/07/09～115/07/24</td><td class="status"><span class="tag-soon">明日 07/25 09:00出關</span></td></tr>
-<tr><td class="code">2434</td><td>統懋</td><td class="pos wrap" title="台灣上下游垂直整合之二極體廠">台灣上下游垂直整合之二極體廠</td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span class="tag-soon">全面預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/07/20～115/07/31</td><td class="status"><span class="tag-near">剩 8 天 (08/01出關)</span></td></tr>
-<tr><td class="code">3675</td><td>德微</td><td class="pos wrap" title="台灣整流二極體供應商">台灣整流二極體供應商</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/07/22～115/08/04</td><td class="status"><span class="tag-in">剩 12 天</span></td></tr>
-<tr><td class="code">8028</td><td>昇陽半導體</td><td class="pos wrap" title="主要從事再生晶圓與晶圓薄化代工業務">主要從事再生晶圓與晶圓薄化代工業務</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">達注意交易資訊標準</td><td>115/07/23～115/08/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
-<tr><td class="code">6182</td><td>合晶</td><td class="pos wrap" title="台灣6吋及8吋矽晶圓製造商">台灣6吋及8吋矽晶圓製造商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/07/24～115/08/10</td><td class="status"><span class="tag-in">剩 18 天</span></td></tr>
-</tbody>
-  </table>
-</div>
 <div class="cluster-card">
   <h3><span class="badge" style="background:#dc2626">處置 5</span> MLCC<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 7 檔</span></h3><div style="margin-top:4px"><span class="related-tag">晶片電阻</span> <span class="related-tag">鋁質電解電容</span> <span class="related-tag">電容</span></div>
   <table>
@@ -277,6 +250,18 @@ function switchTab(tabName) {
 <tr><td class="code">3026</td><td>禾伸堂</td><td class="pos wrap" title="主要自製MLCC及代理電子元件">主要自製MLCC及代理電子元件</td><td>第二次處置</td><td>20分鐘</td><td><span class="tag-soon">全面預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/07/22～115/08/04</td><td class="status"><span class="tag-in">剩 12 天</span></td></tr>
 <tr><td class="code">3624</td><td>光頡</td><td class="pos wrap" title="利基型薄膜電阻廠">利基型薄膜電阻廠</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/07/22～115/08/04</td><td class="status"><span class="tag-in">剩 12 天</span></td></tr>
 <tr><td class="code">6173</td><td>信昌電</td><td class="pos wrap" title="華新科旗下的MLCC及瓷粉原料供應商">華新科旗下的MLCC及瓷粉原料供應商</td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/07/22～115/08/04</td><td class="status"><span class="tag-in">剩 12 天</span></td></tr>
+</tbody>
+  </table>
+</div>
+<div class="cluster-card">
+  <h3><span class="badge" style="background:#dc2626">處置 4</span> 矽晶圓<span style="color:#64748b;font-size:0.85em;margin-left:8px">族群 10 檔</span></h3><div style="margin-top:4px"><span class="related-tag">二極體</span> <span class="related-tag">分離式元件</span> <span class="related-tag">電晶體</span></div>
+  <table>
+    <colgroup><col style="width:60px"><col style="width:72px"><col style="width:130px"><col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px"><col style="width:140px"><col style="width:135px"><col style="width:105px"></colgroup>
+    <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
+    <tbody><tr><td class="code">2434</td><td>統懋</td><td class="pos wrap" title="台灣上下游垂直整合之二極體廠">台灣上下游垂直整合之二極體廠</td><td>第二次處置 (累計2次)</td><td>20分鐘</td><td><span class="tag-soon">全面預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/07/20～115/07/31</td><td class="status"><span class="tag-near">剩 8 天 (08/01出關)</span></td></tr>
+<tr><td class="code">3675</td><td>德微</td><td class="pos wrap" title="台灣整流二極體供應商">台灣整流二極體供應商</td><td>第二次處置</td><td>20分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/07/22～115/08/04</td><td class="status"><span class="tag-in">剩 12 天</span></td></tr>
+<tr><td class="code">8028</td><td>昇陽半導體</td><td class="pos wrap" title="主要從事再生晶圓與晶圓薄化代工業務">主要從事再生晶圓與晶圓薄化代工業務</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">達注意交易資訊標準</td><td>115/07/23～115/08/05</td><td class="status"><span class="tag-in">剩 13 天</span></td></tr>
+<tr><td class="code">6182</td><td>合晶</td><td class="pos wrap" title="台灣6吋及8吋矽晶圓製造商">台灣6吋及8吋矽晶圓製造商</td><td>第一次處置</td><td>5分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/07/24～115/08/10</td><td class="status"><span class="tag-in">剩 18 天</span></td></tr>
 </tbody>
   </table>
 </div>
@@ -323,8 +308,7 @@ function switchTab(tabName) {
 <div class="cluster-card">
 <table>
   <thead><tr><th style="width:90px">出關日</th><th style="width:70px">倒數</th><th style="width:50px">檔數</th><th>個股</th></tr></thead>
-  <tbody><tr><td>2026-07-25</td><td>明日恢復</td><td><strong>1</strong> 檔</td><td>8261 富鼎(電晶體)</td></tr>
-<tr class="highlight"><td>2026-07-28</td><td>剩 4 天</td><td><strong>2</strong> 檔</td><td>8027 鈦昇(封測用設備), 80273 鈦昇三(衍生商品)</td></tr>
+  <tbody><tr class="highlight"><td>2026-07-28</td><td>剩 4 天</td><td><strong>2</strong> 檔</td><td>8027 鈦昇(封測用設備), 80273 鈦昇三(衍生商品)</td></tr>
 <tr class="highlight"><td>2026-07-29</td><td>剩 5 天</td><td><strong>5</strong> 檔</td><td>052974 今國光統一5C購02(衍生商品), 6831 邁科(其他散熱零件), 4542 科嶠(PCB相關設備), 45421 科嶠一(衍生商品), 4556 旭然(水資源設備／耗材)</td></tr>
 <tr class="highlight"><td>2026-07-30</td><td>剩 6 天</td><td><strong>3</strong> 檔</td><td>8096 擎亞(IC零組件通路商), 80962 擎亞二(衍生商品), 80963 擎亞三(衍生商品)</td></tr>
 <tr class="highlight"><td>2026-07-31</td><td>剩 7 天</td><td><strong>2</strong> 檔</td><td>6907 雅特力-KY(MCU), 7714 創泓科技(資訊安全)</td></tr>
