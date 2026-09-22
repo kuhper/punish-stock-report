@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>處置股追蹤 2026-09-21</title>
+<title>處置股追蹤 2026-09-22</title>
 <style>
   * { box-sizing: border-box; margin:0; padding:0; }
   body { font-family: -apple-system,'Microsoft JhengHei','Noto Sans TC','Segoe UI',sans-serif; background:#0f172a; color:#e2e8f0; font-size:15px; line-height:1.7; }
@@ -169,23 +169,19 @@ function switchTab(tabName) {
 <div class="header-wrap">
   <div class="header-left">
     <h1><span>台股處置股追蹤</span></h1>
-    <p class="subtitle">更新時間: 2026-09-21 00:00 ｜ 每日 07:00 / 19:00 / 21:00 自動更新 ｜ 資料來源: 證交所/櫃買中心</p>
+    <p class="subtitle">更新時間: 2026-09-22 00:00 ｜ 每日 07:00 / 19:00 / 21:00 自動更新 ｜ 資料來源: 證交所/櫃買中心</p>
   </div>
   <div class="header-cards">
-    <div class="tomorrow-exit">
-  <div class="te-title">🔔 明日恢復正常交易 (09/22) — 1 檔</div>
-  <ul class="te-list"><li><span class="te-code">706124</span>臺慶科國票61購01 <span class="te-ind">衍生商品</span></li>
-</ul>
+    <div class="tomorrow-exit empty">
+  <div class="te-title" style="color:#475569;">出關預告 (09/23)</div>
+  <span class="te-none">明日無出關個股</span>
 </div>
-
-    <div class="tomorrow-enter">
-  <div class="te-title">🚨 明日進入處置 (09/22) — 2 檔</div>
-  <ul class="te-list"><li><span class="te-code">2468</span>華經 <span class="te-ind">系統整合</span> <span class="te-measure">第一次處置</span></li>
-<li><span class="te-code">5314</span>世紀* <span class="te-ind">食品生技</span> <span class="te-measure">第二次處置</span></li>
-</ul>
+    <div class="tomorrow-enter empty">
+  <div class="te-title" style="color:#475569;">進場預告 (09/23)</div>
+  <span class="te-none">明日無新進處置個股</span>
 </div>
     <div class="pred-wrap">
-  <div style="color:#94a3b8;font-size:0.78em;margin-bottom:6px;">處置風險追蹤 (09/22) — 共 7 檔｜注意日累積 + 款項路徑 + 價格門檻</div>
+  <div style="color:#94a3b8;font-size:0.78em;margin-bottom:6px;">處置風險追蹤 (09/23) — 共 7 檔｜注意日累積 + 款項路徑 + 價格門檻</div>
   <div class="pred-tier">
   <div class="pred-tier-header pred-tier-imminent">即將處置 — 再注意1天即觸發 (3檔)</div>
   <div class="pred-cards"><div class="predict-card predict-5min">
@@ -193,17 +189,17 @@ function switchTab(tabName) {
   <div class="pred-item">
   <div class="pred-stock"><span class="pred-code">6715</span> <span class="pred-name">嘉基</span></div>
   <div class="pred-meta">路徑A · 連續2日 · <span class="pred-tl">1 → 1</span></div>
-  <div class="pred-cond pred-medium">收盤≥456.7(+1.16%)</div>
+  <div class="pred-cond pred-low">收盤≥471.9(+4.52%)</div>
 </div>
 <div class="pred-item">
   <div class="pred-stock"><span class="pred-code">2455</span> <span class="pred-name">全新</span></div>
   <div class="pred-meta">路徑B · 連續4日 · <span class="pred-tl">6 → 6 → 6 → 6</span></div>
-  <div class="pred-cond pred-low">收盤≥706.2(+23.46%)</div>
+  <div class="pred-cond pred-low">收盤≥686.4(+20.00%)</div>
 </div>
 <div class="pred-item">
   <div class="pred-stock"><span class="pred-code">8021</span> <span class="pred-name">尖點</span></div>
   <div class="pred-meta">路徑B · 連續4日 · <span class="pred-tl">6 → 6 → 6 → 6</span></div>
-  <div class="pred-cond pred-low">收盤≥584.1(+25.34%)</div>
+  <div class="pred-cond pred-low">收盤≥569.6(+22.23%)</div>
 </div>
 
 </div></div>
@@ -240,8 +236,8 @@ function switchTab(tabName) {
 
 <div class="stats">
   <div class="stat-card danger"><div class="num">11</div><div class="label">處置公告總筆數</div></div>
-  <div class="stat-card warn"><div class="num">10</div><div class="label">目前仍在處置</div></div>
-  <div class="stat-card info"><div class="num">4</div><div class="label">3天內出關</div></div>
+  <div class="stat-card warn"><div class="num">9</div><div class="label">目前仍在處置</div></div>
+  <div class="stat-card info"><div class="num">3</div><div class="label">3天內出關</div></div>
   <div class="stat-card purple"><div class="num">1</div><div class="label">聚集族群數</div></div>
   <div class="stat-card danger"><div class="num">2</div><div class="label">最大族群 (系統整合)</div></div>
 </div>
@@ -254,8 +250,8 @@ function switchTab(tabName) {
   <table>
     <colgroup><col style="width:60px"><col style="width:72px"><col style="width:130px"><col style="width:80px"><col style="width:55px"><col style="width:65px"><col style="width:68px"><col style="width:140px"><col style="width:135px"><col style="width:105px"></colgroup>
     <thead><tr><th>代號</th><th>名稱</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
-    <tbody><tr><td class="code">6221</td><td>晉泰</td><td class="pos wrap" title="電子商務系統整合廠商">電子商務系統整合廠商</td><td>第一次處置</td><td>2分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/09/21～115/09/29</td><td class="status"><span class="tag-in">剩 9 天</span></td></tr>
-<tr><td class="code">2468</td><td>華經</td><td class="pos wrap" title="以數位影像處理為主的系統整合商">以數位影像處理為主的系統整合商</td><td>第一次處置</td><td>二分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日+當沖標準</td><td>115/09/22～115/10/02</td><td class="status"><span class="tag-in">剩 12 天</span></td></tr>
+    <tbody><tr><td class="code">6221</td><td>晉泰</td><td class="pos wrap" title="電子商務系統整合廠商">電子商務系統整合廠商</td><td>第一次處置</td><td>2分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/09/21～115/09/29</td><td class="status"><span class="tag-near">剩 8 天 (09/30出關)</span></td></tr>
+<tr><td class="code">2468</td><td>華經</td><td class="pos wrap" title="以數位影像處理為主的系統整合商">以數位影像處理為主的系統整合商</td><td>第一次處置</td><td>二分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日+當沖標準</td><td>115/09/22～115/10/02</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
 </tbody>
   </table>
 </div>
@@ -267,12 +263,11 @@ function switchTab(tabName) {
 <div class="cluster-card">
 <table>
   <thead><tr><th style="width:90px">出關日</th><th style="width:70px">倒數</th><th style="width:50px">檔數</th><th>個股</th></tr></thead>
-  <tbody><tr><td>2026-09-22</td><td>明日恢復</td><td><strong>1</strong> 檔</td><td>706124 臺慶科國票61購01(衍生商品)</td></tr>
-<tr class="highlight"><td>2026-09-25</td><td>剩 4 天</td><td><strong>3</strong> 檔</td><td>3467 台灣精材(半導體製程設備), 8227 巨有科技(ASIC), 8358 金居(銅箔)</td></tr>
-<tr><td>2026-09-30</td><td>剩 9 天</td><td><strong>1</strong> 檔</td><td>6221 晉泰(系統整合)</td></tr>
-<tr class="highlight"><td>2026-10-01</td><td>剩 10 天</td><td><strong>3</strong> 檔</td><td>2305 全友(掃瞄器), 5314 世紀*(食品生技), 3441 聯一光(光學鏡片／頭)</td></tr>
-<tr><td>2026-10-02</td><td>剩 11 天</td><td><strong>1</strong> 檔</td><td>6226 光鼎(LED封裝)</td></tr>
-<tr><td>2026-10-03</td><td>剩 12 天</td><td><strong>1</strong> 檔</td><td>2468 華經(系統整合)</td></tr>
+  <tbody><tr class="highlight"><td>2026-09-25</td><td>剩 3 天</td><td><strong>3</strong> 檔</td><td>3467 台灣精材(半導體製程設備), 8227 巨有科技(ASIC), 8358 金居(銅箔)</td></tr>
+<tr><td>2026-09-30</td><td>剩 8 天</td><td><strong>1</strong> 檔</td><td>6221 晉泰(系統整合)</td></tr>
+<tr class="highlight"><td>2026-10-01</td><td>剩 9 天</td><td><strong>3</strong> 檔</td><td>2305 全友(掃瞄器), 5314 世紀*(食品生技), 3441 聯一光(光學鏡片／頭)</td></tr>
+<tr><td>2026-10-02</td><td>剩 10 天</td><td><strong>1</strong> 檔</td><td>6226 光鼎(LED封裝)</td></tr>
+<tr><td>2026-10-03</td><td>剩 11 天</td><td><strong>1</strong> 檔</td><td>2468 華經(系統整合)</td></tr>
 </tbody>
 </table>
 </div>
@@ -288,14 +283,14 @@ function switchTab(tabName) {
 <col style="width:140px"><col style="width:135px"><col style="width:105px">
 </colgroup>
   <thead><tr><th>代號</th><th>名稱</th><th>產業</th><th>產業地位</th><th>處置層級</th><th>撮合</th><th>預收</th><th>融資融券</th><th>觸發原因</th><th>處置期間</th><th>狀態</th></tr></thead>
-  <tbody><tr><td class="code">8227</td><td>巨有科技</td><td>ASIC</td><td class="pos wrap" title="台灣最早成立之IC 設計服務公司">台灣最早成立之IC 設計服務公司</td><td>第二次處置</td><td>2分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/09/18～115/09/24</td><td class="status"><span class="tag-soon">剩 4 天 (09/25出關)</span></td></tr>
-<tr><td class="code">6226</td><td>光鼎</td><td>LED封裝</td><td class="pos wrap" title="專注於LED照明市場之封裝業者">專注於LED照明市場之封裝業者</td><td>第二次處置</td><td>二分鐘</td><td><span class="tag-soon">全面預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/09/21～115/10/01</td><td class="status"><span class="tag-in">剩 11 天</span></td></tr>
-<tr><td class="code">3441</td><td>聯一光</td><td>光學鏡片／頭</td><td class="pos wrap" title="台灣光學鏡頭上游專業光學毛胚廠">台灣光學鏡頭上游專業光學毛胚廠</td><td>第二次處置</td><td>2分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/09/18～115/09/30</td><td class="status"><span class="tag-in">剩 10 天</span></td></tr>
-<tr><td class="code">3467</td><td>台灣精材</td><td>半導體製程設備</td><td class="pos wrap" title="半導體設備使用的精密陶瓷零組件耗材廠">半導體設備使用的精密陶瓷零組件耗材廠</td><td>第一次處置</td><td>2分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/09/18～115/09/24</td><td class="status"><span class="tag-soon">剩 4 天 (09/25出關)</span></td></tr>
-<tr><td class="code">2305</td><td>全友</td><td>掃瞄器</td><td class="pos wrap" title="光罩持股，經營工業用、醫療等數位掃描器">光罩持股，經營工業用、醫療等數位掃描器</td><td>第一次處置</td><td>二分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日+當沖標準</td><td>115/09/18～115/09/30</td><td class="status"><span class="tag-in">剩 10 天</span></td></tr>
-<tr><td class="code">706124</td><td>臺慶科國票61購01</td><td>衍生商品</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>2分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/09/15～115/09/21</td><td class="status"><span class="tag-soon">明日 09/22 09:00出關</span></td></tr>
-<tr><td class="code">8358</td><td>金居</td><td>銅箔</td><td class="pos wrap" title="台灣前三大電解銅箔製造商">台灣前三大電解銅箔製造商</td><td>第二次處置</td><td>2分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/09/18～115/09/24</td><td class="status"><span class="tag-soon">剩 4 天 (09/25出關)</span></td></tr>
-<tr><td class="code">5314</td><td>世紀*</td><td>食品生技</td><td class="pos wrap" title="上曜集團旗下，轉型多元化業務經營">上曜集團旗下，轉型多元化業務經營</td><td>第二次處置</td><td>2分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/09/22～115/09/30</td><td class="status"><span class="tag-in">剩 10 天</span></td></tr>
+  <tbody><tr><td class="code">8227</td><td>巨有科技</td><td>ASIC</td><td class="pos wrap" title="台灣最早成立之IC 設計服務公司">台灣最早成立之IC 設計服務公司</td><td>第二次處置</td><td>2分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/09/18～115/09/24</td><td class="status"><span class="tag-soon">剩 3 天 (09/25出關)</span></td></tr>
+<tr><td class="code">6226</td><td>光鼎</td><td>LED封裝</td><td class="pos wrap" title="專注於LED照明市場之封裝業者">專注於LED照明市場之封裝業者</td><td>第二次處置</td><td>二分鐘</td><td><span class="tag-soon">全面預收</span></td><td>收足自備款</td><td class="wrap">連續3日達注意標準</td><td>115/09/21～115/10/01</td><td class="status"><span class="tag-in">剩 10 天</span></td></tr>
+<tr><td class="code">3441</td><td>聯一光</td><td>光學鏡片／頭</td><td class="pos wrap" title="台灣光學鏡頭上游專業光學毛胚廠">台灣光學鏡頭上游專業光學毛胚廠</td><td>第二次處置</td><td>2分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/09/18～115/09/30</td><td class="status"><span class="tag-in">剩 9 天</span></td></tr>
+<tr><td class="code">3467</td><td>台灣精材</td><td>半導體製程設備</td><td class="pos wrap" title="半導體設備使用的精密陶瓷零組件耗材廠">半導體設備使用的精密陶瓷零組件耗材廠</td><td>第一次處置</td><td>2分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/09/18～115/09/24</td><td class="status"><span class="tag-soon">剩 3 天 (09/25出關)</span></td></tr>
+<tr><td class="code">2305</td><td>全友</td><td>掃瞄器</td><td class="pos wrap" title="光罩持股，經營工業用、醫療等數位掃描器">光罩持股，經營工業用、醫療等數位掃描器</td><td>第一次處置</td><td>二分鐘</td><td><span>條件式預收</span></td><td>收足自備款</td><td class="wrap">連續3日+當沖標準</td><td>115/09/18～115/09/30</td><td class="status"><span class="tag-in">剩 9 天</span></td></tr>
+<tr><td class="code">706124</td><td>臺慶科國票61購01</td><td>衍生商品</td><td class="pos wrap" title=""></td><td>第一次處置</td><td>2分鐘</td><td><span>條件式預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/09/15～115/09/21</td><td class="status"><span class="tag-out">09/22 09:00已出關</span></td></tr>
+<tr><td class="code">8358</td><td>金居</td><td>銅箔</td><td class="pos wrap" title="台灣前三大電解銅箔製造商">台灣前三大電解銅箔製造商</td><td>第二次處置</td><td>2分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/09/18～115/09/24</td><td class="status"><span class="tag-soon">剩 3 天 (09/25出關)</span></td></tr>
+<tr><td class="code">5314</td><td>世紀*</td><td>食品生技</td><td class="pos wrap" title="上曜集團旗下，轉型多元化業務經營">上曜集團旗下，轉型多元化業務經營</td><td>第二次處置</td><td>2分鐘</td><td><span>預收</span></td><td>無限制</td><td class="wrap">達注意交易資訊標準</td><td>115/09/22～115/09/30</td><td class="status"><span class="tag-in">剩 9 天</span></td></tr>
 </tbody>
 </table>
 </div>
