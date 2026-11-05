@@ -20,6 +20,8 @@ import requests, json, re, sys, argparse, csv, os, time
 from datetime import datetime, timedelta
 from pathlib import Path
 from collections import defaultdict, Counter
+from dataclasses import dataclass
+from zoneinfo import ZoneInfo
 
 DATA_DIR = Path(__file__).parent / "punish_data"
 DATA_DIR.mkdir(exist_ok=True)
@@ -61,6 +63,73 @@ def parse_period(period_str):
     return None, None
 
 
+# Source state is committed separately from the public report, including degraded runs.
+STATE_PATH = Path(__file__).parent / "punish_source_state.json"
+
+
+@dataclass
+class SourceSnapshot:
+    records: list
+    healthy: bool
+    error: str = ""
+    complete: bool = True
+
+
+def record_key(record):
+    return (record["code"], record["period_str"], record["condition"], record["measure"])
+
+
+def validate_records(records):
+    for record in records:
+        if not record["code"] or not record["start"] or not record["end"] or record["start"] > record["end"]:
+            raise ValueError("invalid disposal code or period")
+    return records
+
+
+def load_source_state(path=STATE_PATH):
+    state = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    for source in state.values():
+        for record in source.get("records", []):
+            for field in ("start", "end"):
+                record[field] = datetime.fromisoformat(record[field]) if record.get(field) else None
+    return state
+
+
+def save_source_state(state, path=STATE_PATH):
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(json.dumps(state, ensure_ascii=False, indent=2,
+        default=lambda value: value.isoformat()), encoding="utf-8")
+    temporary.replace(path)
+
+
+def reconcile_source(snapshot, previous, today, confirm=None):
+    """Only a validated full snapshot may remove unexpired records.
+
+    A loss of more than half the unexpired announcements requires a second
+    independent, identical full response. Failed/incomplete confirmation degrades.
+    """
+    old = [r for r in previous.get("records", []) if not r.get("end") or r["end"] >= today]
+    current = snapshot.records
+    active = [r for r in current if not r.get("end") or r["end"] >= today]
+    suspicious = snapshot.healthy and len(active) < len(old) * 0.5
+    if suspicious:
+        check = confirm() if confirm else None
+        if not (check and check.healthy and check.complete and
+                Counter(record_key(r) for r in current) == Counter(record_key(r) for r in check.records)):
+            snapshot = SourceSnapshot(current, False, "abnormal shrink; full snapshot unconfirmed")
+    healthy = snapshot.healthy and snapshot.complete
+    if healthy:
+        merged = current
+    else:
+        # Accept new rows, but preserve missing unexpired rows by announcement key.
+        merged_by_key = {record_key(r): r for r in old}
+        merged_by_key.update({record_key(r): r for r in current if not r.get("end") or r["end"] >= today})
+        merged = list(merged_by_key.values())
+    return {"records": merged, "healthy": healthy, "error": snapshot.error,
+            "checked_at": today.isoformat(), "fetched_count": len(current),
+            "retained_count": len(merged)}
+
+
 # ---- 資料抓取 ----
 
 def fetch_twse_punish():
@@ -72,12 +141,12 @@ def fetch_twse_punish():
             r = requests.get(url, headers=HEADERS, timeout=20)
             r.raise_for_status()
             d = r.json()
-            if d.get("stat") != "OK" or not d.get("data"):
+            if d.get("stat") != "OK" or not isinstance(d.get("data"), list):
                 if attempt < max_retries:
                     print(f"  TWSE 回傳無資料，重試 {attempt}/{max_retries}")
                     time.sleep(3 * attempt)
                     continue
-                return []
+                return SourceSnapshot([], False, "invalid response")
             results = []
             for row in d["data"]:
                 code = str(row[2]).strip()
@@ -105,14 +174,14 @@ def fetch_twse_punish():
                 })
             if attempt > 1:
                 print(f"  TWSE 第 {attempt} 次重試成功")
-            return results
+            return SourceSnapshot(validate_records(results), True)
         except Exception as e:
             print(f"  TWSE 抓取失敗 (第{attempt}次): {e}")
             if attempt < max_retries:
                 time.sleep(3 * attempt)
             else:
                 print(f"  TWSE {max_retries} 次重試均失敗")
-                return []
+                return SourceSnapshot([], False, str(e))
 
 
 def fetch_tpex_punish():
@@ -129,7 +198,7 @@ def fetch_tpex_punish():
                 if attempt < max_retries:
                     time.sleep(3 * attempt)
                     continue
-                return []
+                return SourceSnapshot([], False, "invalid response")
             results = []
             for row in rows:
                 code = row.get("SecuritiesCompanyCode", "").strip()
@@ -163,14 +232,14 @@ def fetch_tpex_punish():
                 })
             if attempt > 1:
                 print(f"  TPEx 第 {attempt} 次重試成功")
-            return results
+            return SourceSnapshot(validate_records(results), True)
         except Exception as e:
             print(f"  TPEx 抓取失敗 (第{attempt}次): {e}")
             if attempt < max_retries:
                 time.sleep(3 * attempt)
             else:
                 print(f"  TPEx {max_retries} 次重試均失敗，跳過上櫃資料")
-                return []
+                return SourceSnapshot([], False, str(e))
 
 
 def _convert_tpex_period(raw):
@@ -1621,12 +1690,22 @@ def main():
     print("抓取處置股資料...")
     sys.stdout.flush()
 
-    twse = fetch_twse_punish()
-    print(f"  上市: {len(twse)} 筆")
-    tpex = fetch_tpex_punish()
-    print(f"  上櫃: {len(tpex)} 筆")
-
-    all_records = twse + tpex
+    today = datetime.now(ZoneInfo("Asia/Taipei")).replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
+    previous = load_source_state()
+    state = {}
+    for name, fetch in (("TWSE", fetch_twse_punish), ("TPEx", fetch_tpex_punish)):
+        state[name] = reconcile_source(fetch(), previous.get(name, {}), today, confirm=fetch)
+        print(f"  {name}: {state[name]['fetched_count']} fetched, {state[name]['retained_count']} retained; healthy={state[name]['healthy']}")
+    save_source_state(state)
+    # Persist recovery data even when normal Telegram/Pages publication is blocked.
+    if args.deploy and GITHUB_TOKEN:
+        _github_upload(STATE_PATH, STATE_PATH.name, f"更新處置來源狀態 {today:%Y-%m-%d}")
+    all_records = state["TWSE"]["records"] + state["TPEx"]["records"]
+    degraded = any(not source["healthy"] for source in state.values())
+    if degraded:
+        print("DEGRADED: retained unexpired records; Telegram and Pages publication blocked")
+        print(f"  保護後公告: {len(all_records)}; 未到期股票: {len({r['code'] for r in all_records if r.get('end') and r['end'] >= today})}")
+        return 2
 
     print("取得產業分類...")
     sys.stdout.flush()
@@ -1698,4 +1777,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
